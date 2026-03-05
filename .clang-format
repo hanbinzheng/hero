@@ -1,34 +1,44 @@
-# Based on LLVM's default style with modifications
+# SPDX-License-Identifier: MIT
+# Based on Linux Kernel Style (official), with IndentCaseLabels: true
 BasedOnStyle: LLVM
 
 # --- Indentation & Tabs ---
-# Always use tabs for indentation
 UseTab: Always
-# Set indentation width to 4
-IndentWidth: 4
-# Set tab width to 4
-TabWidth: 4
+IndentWidth: 8
+TabWidth: 8
 
-# --- Brace Wrapping Logic (Linus Style) ---
-# Linux style dictates: function braces break, but if/else/for/while braces don't
+# --- Brace Wrapping Logic ---
 BreakBeforeBraces: Linux
 
 # --- Spacing Rules ---
-# Add spaces after if/for/while, e.g., if (a == b)
 SpaceBeforeParens: ControlStatements
-# Pointer alignment to the right, e.g., char *p; (Linus style)
 PointerAlignment: Right
 
 # --- Line Breaking Limits ---
-# Maximum of 90 characters per line, will automatically wrap if exceeded
-ColumnLimit: 90
-# After line break, align subsequent parameters with the opening bracket
+ColumnLimit: 80
+
+# --- Function Declaration / Call Logic (Aligned with Linux Kernel) ---
+# Linux style allows packing multiple arguments on one line
+BinPackArguments: true
+BinPackParameters: true
+
+# If wrapping occurs, align subsequent lines with the opening bracket
 AlignAfterOpenBracket: Align
-# Do not allow simple if (a) return; on a single line, force line break
+
+# Return type must stay on the same line as the function name
+AlwaysBreakAfterReturnType: None
+
+# --- Penalties (Official Linux Weights) ---
+# Penalty for breaking before the first call parameter (Official: 30)
+PenaltyBreakBeforeFirstCallParameter: 30
+# Strong penalty for putting return type on its own line
+PenaltyReturnTypeOnItsOwnLine: 60
+
+# --- Formatting Details ---
 AllowShortBlocksOnASingleLine: false
-# Force line breaks even for single-line function bodies
 AllowShortFunctionsOnASingleLine: None
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
 
 # --- Other ---
-# Indent case labels in switch statements (non-Linus style)
-IndentCaseLabels: true
+IndentCaseLabels: false

@@ -9,6 +9,6 @@ insert_final_newline = true
 trim_trailing_whitespace = true # delete the trailing spaces on save
 
 # [*.c{ch}] means the following works for .c and .h files
-[*.{c, h}]
+[*.{c,h}]
 indent_style = tab              # real tab (\t) instead of spaces
-indent_size = 4                 # 8 are also acceptable, but some heretic may use 2???
+indent_size = 8                 # 4 is also acceptable, but some heretic saied 2???
