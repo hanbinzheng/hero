@@ -70,7 +70,8 @@ Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c \
 Core/Src/system_stm32h7xx.c \
 Core/Src/sysmem.c \
-Core/Src/syscalls.c  
+Core/Src/syscalls.c  \
+bsp/Src/bsp_fdcan.c  
 
 # ASM sources
 ASM_SOURCES =  \
@@ -137,7 +138,8 @@ C_INCLUDES =  \
 -IDrivers/STM32H7xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32H7xx/Include \
 -IDrivers/CMSIS/Include \
--IMiddlewares/ST/ARM/DSP/Inc
+-IMiddlewares/ST/ARM/DSP/Inc \
+-Ibsp/Inc  
 
 
 # compile gcc flags
