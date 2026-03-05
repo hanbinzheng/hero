@@ -1,0 +1,34 @@
+# Based on LLVM's default style with modifications
+BasedOnStyle: LLVM
+
+# --- Indentation & Tabs ---
+# Always use tabs for indentation
+UseTab: Always
+# Set indentation width to 4
+IndentWidth: 4
+# Set tab width to 4
+TabWidth: 4
+
+# --- Brace Wrapping Logic (Linus Style) ---
+# Linux style dictates: function braces break, but if/else/for/while braces don't
+BreakBeforeBraces: Linux
+
+# --- Spacing Rules ---
+# Add spaces after if/for/while, e.g., if (a == b)
+SpaceBeforeParens: ControlStatements
+# Pointer alignment to the right, e.g., char *p; (Linus style)
+PointerAlignment: Right
+
+# --- Line Breaking Limits ---
+# Maximum of 90 characters per line, will automatically wrap if exceeded
+ColumnLimit: 90
+# After line break, align subsequent parameters with the opening bracket
+AlignAfterOpenBracket: Align
+# Do not allow simple if (a) return; on a single line, force line break
+AllowShortBlocksOnASingleLine: false
+# Force line breaks even for single-line function bodies
+AllowShortFunctionsOnASingleLine: None
+
+# --- Other ---
+# Indent case labels in switch statements (non-Linus style)
+IndentCaseLabels: true
