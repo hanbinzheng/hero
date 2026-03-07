@@ -1,2 +1,12 @@
+# build directory
 build/
+
+# binary files
+*.elf
+*.hex
+*.bin
+
+# ozone debug configurations
+*.jdebug
+*.jdebug.user
 
