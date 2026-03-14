@@ -76,7 +76,8 @@ bsp/Src/bsp_usart.c \
 device/Src/dbus.c \
 device/Src/vt03.c \
 device/Src/dji_motor.c \
-device/Src/motor.c
+device/Src/motor.c \
+algorithm/Src/pid.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -145,7 +146,8 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -IMiddlewares/ST/ARM/DSP/Inc \
 -Ibsp/Inc  \
--Idevice/Inc
+-Idevice/Inc \
+-Ialgorithm/Inc
 
 
 # compile gcc flags

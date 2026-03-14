@@ -31,6 +31,7 @@
 #include "bsp_usart.h"
 #include "string.h"
 #include "dji_motor.h"
+#include "dbus.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,9 +52,8 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t tx_buff[8] = {0};
-uint8_t rx_buff[8];
-int can_status = 114514;
+int tx_status = 114514;
+float ref_vel = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,6 +119,9 @@ int main(void)
   while (1)
   {
 	HAL_Delay(1);
+	float vel = dbus_data.ls_x * 15;
+	ref_vel = vel;
+	tx_status = dji6020_set_vel(0, 0, 0, vel);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
