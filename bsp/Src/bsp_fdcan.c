@@ -1,4 +1,5 @@
 #include "bsp_fdcan.h"
+#include <stdint.h>
 
 #define DATA_LENGTH 8 /* Classical CAN */
 
@@ -8,11 +9,14 @@ struct fdcan_instance {
 	uint8_t rx_buff[DATA_LENGTH];
 };
 
-static struct fdcan_instance fdcan_inst[] = {
-    {.hfdcan = &hfdcan1, .rx_buff = {0}},
-    {.hfdcan = &hfdcan2, .rx_buff = {0}},
-    {.hfdcan = &hfdcan3, .rx_buff = {0}},
+struct can_filter_config {
+	uint32_t rx_id;
+	uint32_t rx_mask;
+	enum can_id_type id_type;
+	FDCAN_HandleTypeDef *hfdcan;
 };
+
+int can_debug = 0;
 
 #define NUM_FDCAN_INSTANCE (sizeof(fdcan_inst) / sizeof(struct fdcan_instance))
 
@@ -26,9 +30,39 @@ static struct fdcan_instance fdcan_inst[] = {
 #define MAX_STD_FILTER_CNT 16
 #define MAX_EXT_FILTER_CNT 8
 
-static can_rx_callback_t rx_callback = NULL;
-
 static uint8_t filter_configured = 0u;
+
+static struct fdcan_instance fdcan_inst[] = {
+    {.hfdcan = &hfdcan1, .rx_buff = {0}},
+    {.hfdcan = &hfdcan2, .rx_buff = {0}},
+    {.hfdcan = &hfdcan3, .rx_buff = {0}},
+};
+
+static struct can_filter_config fdcan1_config[] = {
+    {.rx_id = 0x201, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x202, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x203, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x204, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x205, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x206, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x207, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x208, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x301, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x00B, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+};
+
+static struct can_filter_config fdcan2_config[] = {
+    {.rx_id = 0x201, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+    {.rx_id = 0x202, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+    {.rx_id = 0x203, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+    {.rx_id = 0x204, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+    {.rx_id = 0x205, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+    {.rx_id = 0x206, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan2},
+};
+
+static struct can_filter_config fdcan3_config[] = {
+    {.rx_id = 0x201, .rx_mask = 0x0FF, .id_type = CAN_ID_EXT, .hfdcan = &hfdcan3},
+};
 
 static int16_t get_instance_index(FDCAN_HandleTypeDef *hfdcan)
 {
@@ -96,10 +130,8 @@ static HAL_StatusTypeDef add_filter(struct can_filter_config const *conf)
 	 * both parameters will be ignored if FilterConfig is different from
 	 * FDCAN_FILTER_TO_BUFFER.
 	 */
-	filter.FilterType =
-	    FDCAN_FILTER_MASK; /* Matching: FilterID1 & FilterID2 */
-	filter.FilterConfig =
-	    FDCAN_FILTER_TO_RXFIFO0; /* Always reports to RxFIFO0 */
+	filter.FilterType = FDCAN_FILTER_MASK; /* Matching: FilterID1 & FilterID2 */
+	filter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; /* Always reports to RxFIFO0 */
 	filter.FilterID1 = conf->rx_id;
 	filter.FilterID2 = conf->rx_mask;
 
@@ -128,8 +160,8 @@ static HAL_StatusTypeDef add_filter(struct can_filter_config const *conf)
  * Return: HAL_OK if all filters configured successfully,
  * HAL_ERROR if any filter fails or device limit exceeded.
  */
-HAL_StatusTypeDef can_config_filter(struct can_filter_config const *conf,
-				    uint16_t num)
+static HAL_StatusTypeDef can_config_filter(struct can_filter_config const *conf,
+					   uint16_t num)
 {
 	/* TODO: Log Messages & Error Case */
 	/*
@@ -191,11 +223,16 @@ HAL_StatusTypeDef can_init(void)
 	 * HAL_FDCAN_STATE_BUSY. HAL_FDCAN_ConfigFilter and
 	 * HAL_FDCAN_ActivateNotification accept both states.
 	 */
+
+	/* Configure filters */
+	can_config_filter(fdcan1_config, 10);
+	can_config_filter(fdcan2_config, 6);
+	can_config_filter(fdcan3_config, 1);
+
 	uint8_t result = HAL_OK;
 	FDCAN_HandleTypeDef *hfdcan;
 	/* Decide acception strategy based on whether filters are configured. */
-	uint32_t unmatch =
-	    filter_configured ? FDCAN_REJECT : FDCAN_ACCEPT_IN_RX_FIFO0;
+	uint32_t unmatch = filter_configured ? FDCAN_REJECT : FDCAN_ACCEPT_IN_RX_FIFO0;
 
 	for (int i = 0; i < NUM_FDCAN_INSTANCE; i++) {
 		hfdcan = fdcan_inst[i].hfdcan;
@@ -204,8 +241,8 @@ HAL_StatusTypeDef can_init(void)
 						 FDCAN_REJECT_REMOTE,
 						 FDCAN_REJECT_REMOTE) != HAL_OK)
 			result = HAL_ERROR;
-		if (HAL_FDCAN_ActivateNotification(
-			hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
+		if (HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE,
+						   0) != HAL_OK)
 			result = HAL_ERROR;
 		if (HAL_FDCAN_Start(hfdcan) != HAL_OK) {
 			result = HAL_ERROR;
@@ -241,8 +278,7 @@ HAL_StatusTypeDef can_transmit(FDCAN_HandleTypeDef *hfdcan, uint32_t id,
 
 	FDCAN_TxHeaderTypeDef tx_header = {
 	    .Identifier = id,
-	    .IdType =
-		(type == CAN_ID_STD) ? FDCAN_STANDARD_ID : FDCAN_EXTENDED_ID,
+	    .IdType = (type == CAN_ID_STD) ? FDCAN_STANDARD_ID : FDCAN_EXTENDED_ID,
 	    .TxFrameType = FDCAN_DATA_FRAME, /* Only use data frame */
 	    .DataLength = FDCAN_DLC_BYTES_8, /* Classical CAN */
 	    .ErrorStateIndicator = FDCAN_ESI_ACTIVE,
@@ -255,27 +291,7 @@ HAL_StatusTypeDef can_transmit(FDCAN_HandleTypeDef *hfdcan, uint32_t id,
 	return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &tx_header, buff);
 }
 
-/**
- * can_register_rx_callback() - Register the global CAN reception callback
- * @callback: Function pointer to process received CAN messages.
- *
- * Context: The callback function runs in interrupt context and must be
- * non-blocking. Received data must be processed or copied immediately as the
- * rx_buff is reused for subsequent messages.
- */
-void can_register_rx_callback(can_rx_callback_t callback)
-{
-	/* TODO: Log Message & Error Case */
-	if (callback == NULL)
-		return;
-
-	/* TODO: Warning and handling repetition. */
-	if (rx_callback != NULL) {
-		;
-	}
-
-	rx_callback = callback;
-}
+__weak void fdcan_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
 
 /**
  * HAL_FDCAN_RxFifo0Callback() - FDCAN Rx FIFO 0 callback (weak function
@@ -289,18 +305,19 @@ void can_register_rx_callback(can_rx_callback_t callback)
  */
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 {
+	can_debug++;
 
 	/* TODO: Log Message & Error Cases */
 	if (RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) {
 		FDCAN_RxHeaderTypeDef rx_header;
 		uint8_t *buff = get_rx_buff(hfdcan);
-		if (buff == NULL || rx_callback == NULL)
+		if (buff == NULL)
 			return;
 
-		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header,
-					   buff) != HAL_OK)
+		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, buff) !=
+		    HAL_OK)
 			return;
 
-		rx_callback(&rx_header, buff);
+		fdcan_data_interpret(&rx_header, buff);
 	}
 }

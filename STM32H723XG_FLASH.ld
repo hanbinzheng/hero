@@ -185,6 +185,19 @@ SECTIONS
     __bss_end__ = _ebss;
   } >DTCMRAM
 
+
+  /* buffer specified for dma1 and dma */
+  .dma12_buffer (NOLOAD) :
+  {
+    . = ALIGN(4);
+    _sdma_buffer = .;      /* record start address */
+    *(.dma12_buffer)       /* colloct all variable with .dma12_buffer */
+    *(.dma12_buffer*)
+    . = ALIGN(4);
+    _edma_buffer = .;      /* record end address */
+  } >RAM_D2
+
+
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack :
   {

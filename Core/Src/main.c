@@ -27,7 +27,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bsp_fdcan.h"
+#include "bsp_usart.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,13 +50,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t tx_buff[8] = {0x20, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20, 0x00};
+uint8_t rx_buff[8];
+int can_status = 114514;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void fdcan_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff) {
+	if (header->Identifier == 0x205) {
+		memcpy(rx_buff, buff, 8);
+	}
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -103,14 +111,18 @@ int main(void)
   MX_TIM12_Init();
   MX_TIM15_Init();
   MX_FDCAN2_Init();
+  MX_UART7_Init();
   /* USER CODE BEGIN 2 */
-
+  usart_init();
+  can_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	HAL_Delay(1);
+	can_status = can_transmit(&hfdcan1, 0x1FF, CAN_ID_STD, tx_buff);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
