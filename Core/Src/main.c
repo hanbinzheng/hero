@@ -30,6 +30,7 @@
 #include "bsp_fdcan.h"
 #include "bsp_usart.h"
 #include "string.h"
+#include "dji_motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,7 +51,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t tx_buff[8] = {0x20, 0x00, 0x20, 0x00, 0x20, 0x00, 0x20, 0x00};
+uint8_t tx_buff[8] = {0};
 uint8_t rx_buff[8];
 int can_status = 114514;
 /* USER CODE END PV */
@@ -59,8 +60,33 @@ int can_status = 114514;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 void fdcan_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff) {
-	if (header->Identifier == 0x205) {
-		memcpy(rx_buff, buff, 8);
+	switch (header->Identifier) {
+		case 0x201:
+			dji_motor_interpret(buff, &dji3508_1);
+			break;
+		case 0x202:
+			dji_motor_interpret(buff, &dji3508_2);
+			break;
+		case 0x203:
+			dji_motor_interpret(buff, &dji3508_3);
+			break;
+		case 0x204:
+			dji_motor_interpret(buff, &dji3508_4);
+			break;
+		case 0x205:
+			dji_motor_interpret(buff, &dji6020_1);
+			break;
+		case 0x206:
+			dji_motor_interpret(buff, &dji6020_2);
+			break;
+		case 0x207:
+			dji_motor_interpret(buff, &dji6020_3);
+			break;
+		case 0x208:
+			dji_motor_interpret(buff, &dji6020_4);
+			break;
+		default:
+			break;
 	}
 }
 /* USER CODE END PFP */
@@ -122,7 +148,6 @@ int main(void)
   while (1)
   {
 	HAL_Delay(1);
-	can_status = can_transmit(&hfdcan1, 0x1FF, CAN_ID_STD, tx_buff);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
