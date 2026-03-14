@@ -54,6 +54,8 @@
 /* USER CODE BEGIN PV */
 int tx_status = 114514;
 float ref_vel = 0;
+float measure_pos;
+float ref_pos;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -119,9 +121,9 @@ int main(void)
   while (1)
   {
 	HAL_Delay(1);
-	float vel = dbus_data.ls_x * 15;
-	ref_vel = vel;
-	tx_status = dji6020_set_vel(0, 0, 0, vel);
+	ref_pos = dbus_data.ls_x * 3.1415926;
+	measure_pos = update_pos(&dji6020_1, 6871);
+	tx_status = dji6020_set_pos(ref_pos, 0, 0, 0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

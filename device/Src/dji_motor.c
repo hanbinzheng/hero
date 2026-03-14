@@ -2,6 +2,7 @@
 #include "bsp_fdcan.h"
 #include "pid.h"
 
+#define PI (3.14159265358979f)
 #define RPM_TO_RADS(value) ((float)(value) * 2 * 3.14159265359f / 60.0f)
 #define ANGLE_TO_RADS(value) ((float)(value) * 2 * 3.14159265359f / 8192.0f)
 // GM6020
@@ -47,13 +48,48 @@ static struct pid_info pid_3508v2c_4 = {
 static struct pid_info pid_6020v2v_1 = {
 	.kp = 1.25f, .ki = 0.5f, .kd = 0, .i_limit = 0.75f, .out_limit = 20};
 static struct pid_info pid_6020v2v_2 = {
-	.kp = 1.4f, .ki = 0.2f, .kd = 0, .i_limit = 0.5f, .out_limit = 20};
+	.kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
 static struct pid_info pid_6020v2v_3 = {
-	.kp = 1.25f, .ki = 0.1f, .kd = 0, .i_limit = 0.5f, .out_limit = 20};
+	.kp = 1.1f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
 static struct pid_info pid_6020v2v_4 = {
-	.kp = 1.0f, .ki = 0.1f, .kd = 0, .i_limit = 0.5f, .out_limit = 20};
+	.kp = 1.0f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
+
+static struct pid_info pid_6020p2v_1 = {
+	.kp = 15.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+static struct pid_info pid_6020p2v_2 = {
+	.kp = 15.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+static struct pid_info pid_6020p2v_3 = {
+	.kp = 15.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+static struct pid_info pid_6020p2v_4 = {
+	.kp = 15.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+static int angle_offset_1 = 6871;
+static int angle_offset_2 = 50;
+static int angle_offset_3 = 657;
+static int angle_offset_4 = 4090;
 
 
+float update_pos(struct motor_info *motor, int offset) {
+	/* - pi ~ pi, where offset is the zero part*/
+	int angle = motor->raw_pos - offset;
+	if (angle >= 4096) {
+		angle -= 8192;
+	} else if (angle < -4096) {
+		angle += 8192;
+	}
+
+	return ANGLE_TO_RADS(angle);
+}
+
+static float update_pos_ref(float ref, float measure) {
+	if (ref - measure >= PI) {
+		ref -= 2 * PI;
+	} else if (ref - measure <= - PI) {
+		ref += 2 * PI;
+	}
+
+	return ref;
+}
+	
 void dji_motor_interpret(uint8_t *rx_buff, struct motor_info *motor)
 {
     // interpret feedback raw data
@@ -131,4 +167,24 @@ HAL_StatusTypeDef dji6020_set_vel(float v1, float v2, float v3, float v4) {
     data[7] = volt_int_4 & 0xFF;
 
 	return can_transmit(&hfdcan1, 0x1FF, CAN_ID_STD, data);
+}
+
+/* pos1 ... pos4 should within - pi ~ pi */
+HAL_StatusTypeDef dji6020_set_pos(float pos1, float pos2, float pos3, float pos4) {
+	float measure_p1 = update_pos(&dji6020_1, angle_offset_1);
+	float measure_p2 = update_pos(&dji6020_2, angle_offset_2);
+	float measure_p3 = update_pos(&dji6020_3, angle_offset_3);
+	float measure_p4 = update_pos(&dji6020_4, angle_offset_4);
+
+	pos1 = update_pos_ref(pos1, measure_p1);
+	pos2 = update_pos_ref(pos2, measure_p2);
+	pos3 = update_pos_ref(pos3, measure_p3);
+	pos4 = update_pos_ref(pos4, measure_p4);
+
+	float v1 = pid_calculate(&pid_6020p2v_1, pos1, measure_p1);
+	float v2 = pid_calculate(&pid_6020p2v_2, pos2, measure_p2);
+	float v3 = pid_calculate(&pid_6020p2v_3, pos3, measure_p3);
+	float v4 = pid_calculate(&pid_6020p2v_4, pos4, measure_p4);
+
+	return dji6020_set_vel(v1, v2, v3, v4);
 }
