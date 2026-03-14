@@ -291,7 +291,9 @@ HAL_StatusTypeDef can_transmit(FDCAN_HandleTypeDef *hfdcan, uint32_t id,
 	return HAL_FDCAN_AddMessageToTxFifoQ(hfdcan, &tx_header, buff);
 }
 
-__weak void fdcan_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
+__weak void fdcan1_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
+__weak void fdcan2_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
+__weak void fdcan3_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
 
 /**
  * HAL_FDCAN_RxFifo0Callback() - FDCAN Rx FIFO 0 callback (weak function
@@ -318,6 +320,14 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		    HAL_OK)
 			return;
 
-		fdcan_data_interpret(&rx_header, buff);
+		if (hfdcan == &hfdcan1) {
+			fdcan1_data_interpret(&rx_header, buff);
+		} else if (hfdcan == &hfdcan2) {
+			fdcan2_data_interpret(&rx_header, buff);
+		} else if (hfdcan == &hfdcan3) {
+			fdcan3_data_interpret(&rx_header, buff);
+		}
+
+		
 	}
 }
