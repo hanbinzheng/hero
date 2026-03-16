@@ -77,7 +77,9 @@ device/Src/dbus.c \
 device/Src/vt03.c \
 device/Src/dji_motor.c \
 device/Src/motor.c \
-algorithm/Src/pid.c
+algorithm/Src/pid.c \
+algorithm/Src/kinematics.c \
+application/Src/chassis.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -131,7 +133,8 @@ AS_DEFS =
 C_DEFS =  \
 -DUSE_PWR_LDO_SUPPLY \
 -DUSE_HAL_DRIVER \
--DSTM32H723xx
+-DSTM32H723xx \
+-DARM_MATH_CM7
 
 
 # AS includes
@@ -147,7 +150,9 @@ C_INCLUDES =  \
 -IMiddlewares/ST/ARM/DSP/Inc \
 -Ibsp/Inc  \
 -Idevice/Inc \
--Ialgorithm/Inc
+-Ialgorithm/Inc \
+-IMiddlewares/ST/ARM/DSP/INC \
+-Iapplication/Inc
 
 
 # compile gcc flags
@@ -171,8 +176,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32H723XG_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys 
-LIBDIR = 
+LIBS = -lc -lm -lnosys -larm_cortexM7lfdp_math
+LIBDIR = -LDrivers/CMSIS/DSP/Lib/GCC
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
