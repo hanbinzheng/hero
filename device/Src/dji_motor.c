@@ -43,7 +43,7 @@ static struct pid_info pid_6020p2v_3 = {
 static struct pid_info pid_6020p2v_4 = {
     .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
 
-float update_pos(struct motor_info *motor, int offset)
+float dji_get_pos(struct motor_info *motor, int offset)
 {
 	/* - pi ~ pi, where offset is the zero part*/
 	int angle = motor->raw_pos - offset;
@@ -155,10 +155,10 @@ HAL_StatusTypeDef dji6020_set_vel(float v1, float v2, float v3, float v4)
 /* pos1 ... pos4 should within - pi ~ pi */
 HAL_StatusTypeDef dji6020_set_pos(float pos1, float pos2, float pos3, float pos4)
 {
-	float measure_p1 = update_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
-	float measure_p2 = update_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
-	float measure_p3 = update_pos(&dji6020_3, GM6020_ANGLE_OFFSET_3);
-	float measure_p4 = update_pos(&dji6020_4, GM6020_ANGLE_OFFSET_4);
+	float measure_p1 = dji_get_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
+	float measure_p2 = dji_get_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
+	float measure_p3 = dji_get_pos(&dji6020_3, GM6020_ANGLE_OFFSET_3);
+	float measure_p4 = dji_get_pos(&dji6020_4, GM6020_ANGLE_OFFSET_4);
 
 	pos1 = update_pos_ref(pos1, measure_p1);
 	pos2 = update_pos_ref(pos2, measure_p2);

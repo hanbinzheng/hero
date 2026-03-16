@@ -23,7 +23,7 @@
 **     |           |
 **     3-----------4
 */
-void kinematics_swerve(float vel[3], float yaw_diff, float tgt_vx[4], float tgt_vy[4])
+void kinematics_swerve(float vel[3], float yaw_diff, float tgt_pos[4], float tgt_vel[4])
 {
 	/* get velocities under the gimbal frame */
 	float vx_g = vel[0];
@@ -49,13 +49,18 @@ void kinematics_swerve(float vel[3], float yaw_diff, float tgt_vx[4], float tgt_
 	 * v4 = vc + v_rotate / SQRT_2 * (1, -1)
 	 *
 	 */
+	float tgt_vx[4], tgt_vy[4];
 	tgt_vx[0] = vx_c + v_rotate * SQRT_2_OVER_2;
 	tgt_vx[1] = vx_c - v_rotate * SQRT_2_OVER_2;
 	tgt_vx[2] = vx_c - v_rotate * SQRT_2_OVER_2;
 	tgt_vx[3] = vx_c + v_rotate * SQRT_2_OVER_2;
-
 	tgt_vy[0] = vy_c + v_rotate * SQRT_2_OVER_2;
 	tgt_vy[1] = vy_c + v_rotate * SQRT_2_OVER_2;
 	tgt_vy[2] = vy_c - v_rotate * SQRT_2_OVER_2;
 	tgt_vy[3] = vy_c - v_rotate * SQRT_2_OVER_2;
+
+	for (int i = 0; i < 4; i++) {
+		tgt_pos[i] = atan2f(tgt_vy[i], tgt_vx[i]);
+		arm_sqrt_f32(NORM_SQUARE(tgt_vx[i], tgt_vy[i]), &tgt_vel[i]);
+	}
 }
