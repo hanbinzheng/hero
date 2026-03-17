@@ -73,6 +73,7 @@ Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 bsp/Src/bsp_fdcan.c \
 bsp/Src/bsp_usart.c \
+bsp/Src/bsp_dwt.c \
 device/Src/dbus.c \
 device/Src/vt03.c \
 device/Src/dji_motor.c \
