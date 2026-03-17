@@ -54,16 +54,23 @@ struct motor_info {
 };
 
 void dji_motor_interpret(uint8_t *rx_buff, struct motor_info *motor);
-HAL_StatusTypeDef dji3508_set_chassis_vel(float v1, float v2, float v3, float v4);
-HAL_StatusTypeDef dji6020_set_vel(float v1, float v2, float v3, float v4);
+HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4]);
+HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6]);
+HAL_StatusTypeDef dji6020_set_vel(float vel[4]);
 
 float dji_get_pos(struct motor_info *motor, int offset);
-HAL_StatusTypeDef dji6020_set_pos(float pos1, float pos2, float pos3, float pos4);
+HAL_StatusTypeDef dji6020_set_pos(float pos[4]);
 
 extern struct motor_info dji3508_1;
 extern struct motor_info dji3508_2;
 extern struct motor_info dji3508_3;
 extern struct motor_info dji3508_4;
+extern struct motor_info dji3508_5;
+extern struct motor_info dji3508_6;
+extern struct motor_info dji3508_7;
+extern struct motor_info dji3508_8;
+extern struct motor_info dji3508_9;
+extern struct motor_info dji3508_10;
 extern struct motor_info dji6020_1;
 extern struct motor_info dji6020_2;
 extern struct motor_info dji6020_3;

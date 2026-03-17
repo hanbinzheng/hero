@@ -7,6 +7,7 @@
  * Motor Informations
  **************************************************************************
  */
+/* chassis motors */
 struct motor_info dji3508_1 = {.type = M3508};
 struct motor_info dji3508_2 = {.type = M3508};
 struct motor_info dji3508_3 = {.type = M3508};
@@ -16,6 +17,15 @@ struct motor_info dji6020_2 = {.type = GM6020};
 struct motor_info dji6020_3 = {.type = GM6020};
 struct motor_info dji6020_4 = {.type = GM6020};
 
+/* armor friction motors */
+struct motor_info dji3508_5 = {.type = M3508};
+struct motor_info dji3508_6 = {.type = M3508};
+struct motor_info dji3508_7 = {.type = M3508};
+struct motor_info dji3508_8 = {.type = M3508};
+struct motor_info dji3508_9 = {.type = M3508};
+struct motor_info dji3508_10 = {.type = M3508};
+
+/* chassis 3508 motor pid */
 static struct pid_info pid_3508v2c_1 = {
     .kp = 0.045f, .ki = 0.008, .kd = 0, .i_limit = 0.5, .out_limit = 20};
 static struct pid_info pid_3508v2c_2 = {
@@ -25,6 +35,7 @@ static struct pid_info pid_3508v2c_3 = {
 static struct pid_info pid_3508v2c_4 = {
     .kp = 0.045f, .ki = 0.008, .kd = 0, .i_limit = 0.5, .out_limit = 20};
 
+/* chassis 6020 motor pid*/
 static struct pid_info pid_6020v2v_1 = {
     .kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
 static struct pid_info pid_6020v2v_2 = {
@@ -42,6 +53,21 @@ static struct pid_info pid_6020p2v_3 = {
     .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
 static struct pid_info pid_6020p2v_4 = {
     .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+
+/* armor friction 3508 pid */
+static struct pid_info pid_3508v2c_5 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+static struct pid_info pid_3508v2c_6 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+static struct pid_info pid_3508v2c_7 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+static struct pid_info pid_3508v2c_8 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+static struct pid_info pid_3508v2c_9 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+static struct pid_info pid_3508v2c_10 = {
+    .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
+
 
 float dji_get_pos(struct motor_info *motor, int offset)
 {
@@ -95,13 +121,13 @@ void dji_motor_interpret(uint8_t *rx_buff, struct motor_info *motor)
 	}
 }
 
-HAL_StatusTypeDef dji3508_set_chassis_vel(float v1, float v2, float v3, float v4)
+HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4])
 {
 	/* 0x200 */
-	float c1 = pid_calculate(&pid_3508v2c_1, v1 * M3508_REDUC_RATE, dji3508_1.vel);
-	float c2 = pid_calculate(&pid_3508v2c_2, v2 * M3508_REDUC_RATE, dji3508_2.vel);
-	float c3 = pid_calculate(&pid_3508v2c_3, v3 * M3508_REDUC_RATE, dji3508_3.vel);
-	float c4 = pid_calculate(&pid_3508v2c_4, v4 * M3508_REDUC_RATE, dji3508_4.vel);
+	float c1 = pid_calculate(&pid_3508v2c_1, vel[0] * M3508_REDUC_RATE, dji3508_1.vel);
+	float c2 = pid_calculate(&pid_3508v2c_2, vel[1] * M3508_REDUC_RATE, dji3508_2.vel);
+	float c3 = pid_calculate(&pid_3508v2c_3, vel[2] * M3508_REDUC_RATE, dji3508_3.vel);
+	float c4 = pid_calculate(&pid_3508v2c_4, vel[3] * M3508_REDUC_RATE, dji3508_4.vel);
 
 	uint16_t c1_int = M3508_CURRENT_FLOAT_TO_INT(c1);
 	uint16_t c2_int = M3508_CURRENT_FLOAT_TO_INT(c2);
@@ -121,18 +147,58 @@ HAL_StatusTypeDef dji3508_set_chassis_vel(float v1, float v2, float v3, float v4
 	return can_transmit(&hfdcan1, 0x200, CAN_ID_STD, data);
 }
 
-HAL_StatusTypeDef dji6020_set_vel(float v1, float v2, float v3, float v4)
+HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6]) {
+	/* 0x200 + 0x1FF */
+	float c1 = pid_calculate(&pid_3508v2c_5, vel[0], dji3508_5.vel);
+	float c2 = pid_calculate(&pid_3508v2c_6, vel[1], dji3508_6.vel);
+	float c3 = pid_calculate(&pid_3508v2c_7, vel[2], dji3508_7.vel);
+	float c4 = pid_calculate(&pid_3508v2c_8, vel[3], dji3508_8.vel);
+	float c5 = pid_calculate(&pid_3508v2c_9, vel[4], dji3508_9.vel);
+	float c6 = pid_calculate(&pid_3508v2c_10, vel[5], dji3508_10.vel);
+
+	uint16_t c1_int = M3508_CURRENT_FLOAT_TO_INT(c1);
+	uint16_t c2_int = M3508_CURRENT_FLOAT_TO_INT(c2);
+	uint16_t c3_int = M3508_CURRENT_FLOAT_TO_INT(c3);
+	uint16_t c4_int = M3508_CURRENT_FLOAT_TO_INT(c4);
+	uint16_t c5_int = M3508_CURRENT_FLOAT_TO_INT(c5);
+	uint16_t c6_int = M3508_CURRENT_FLOAT_TO_INT(c6);
+
+	uint8_t data1[8] = {0}, data2[8] = {0};
+	data1[0] = (c1_int >> 8) & 0xFF;
+	data1[1] = c1_int & 0xFF;
+	data1[2] = (c2_int >> 8) & 0xFF;
+	data1[3] = c2_int & 0xFF;
+	data1[4] = (c3_int >> 8) & 0xFF;
+	data1[5] = c3_int & 0xFF;
+	data1[6] = (c4_int >> 8) & 0xFF;
+	data1[7] = c4_int & 0xFF;
+	data2[0] = (c5_int >> 8) & 0xFF;
+	data2[1] = c5_int & 0xFF;
+	data2[2] = (c6_int >> 8) & 0xFF;
+	data2[3] = c6_int & 0xFF;
+
+	uint8_t ret1 = can_transmit(&hfdcan2, 0x200, CAN_ID_STD, data1);
+	uint8_t ret2 = can_transmit(&hfdcan2, 0x1FF, CAN_ID_STD, data2);
+	
+	if (ret1 == HAL_OK && ret2 == HAL_OK) {
+		return HAL_OK;
+	} else {
+		return HAL_ERROR;
+	}
+}
+
+HAL_StatusTypeDef dji6020_set_vel(float vel[4])
 {
 	/* 0x1FF */
 
 	float volt_1 =
-	    pid_calculate(&pid_6020v2v_1, v1, dji6020_1.vel) + GM6020_LINEAR_RATE * v1;
+	    pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) + GM6020_LINEAR_RATE * vel[0];
 	float volt_2 =
-	    pid_calculate(&pid_6020v2v_2, v2, dji6020_2.vel) + GM6020_LINEAR_RATE * v2;
+	    pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + GM6020_LINEAR_RATE * vel[1];
 	float volt_3 =
-	    pid_calculate(&pid_6020v2v_3, v3, dji6020_3.vel) + GM6020_LINEAR_RATE * v3;
+	    pid_calculate(&pid_6020v2v_3, vel[2], dji6020_3.vel) + GM6020_LINEAR_RATE * vel[2];
 	float volt_4 =
-	    pid_calculate(&pid_6020v2v_4, v4, dji6020_4.vel) + GM6020_LINEAR_RATE * v4;
+	    pid_calculate(&pid_6020v2v_4, vel[3], dji6020_4.vel) + GM6020_LINEAR_RATE * vel[3];
 
 	uint16_t volt_int_1 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_1);
 	uint16_t volt_int_2 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_2);
@@ -153,22 +219,23 @@ HAL_StatusTypeDef dji6020_set_vel(float v1, float v2, float v3, float v4)
 }
 
 /* pos1 ... pos4 should within - pi ~ pi */
-HAL_StatusTypeDef dji6020_set_pos(float pos1, float pos2, float pos3, float pos4)
+HAL_StatusTypeDef dji6020_set_pos(float pos[4])
 {
 	float measure_p1 = dji_get_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
 	float measure_p2 = dji_get_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
 	float measure_p3 = dji_get_pos(&dji6020_3, GM6020_ANGLE_OFFSET_3);
 	float measure_p4 = dji_get_pos(&dji6020_4, GM6020_ANGLE_OFFSET_4);
 
-	pos1 = update_pos_ref(pos1, measure_p1);
-	pos2 = update_pos_ref(pos2, measure_p2);
-	pos3 = update_pos_ref(pos3, measure_p3);
-	pos4 = update_pos_ref(pos4, measure_p4);
+	pos[0] = update_pos_ref(pos[0], measure_p1);
+	pos[1] = update_pos_ref(pos[1], measure_p2);
+	pos[2] = update_pos_ref(pos[2], measure_p3);
+	pos[3] = update_pos_ref(pos[3], measure_p4);
 
-	float v1 = pid_calculate(&pid_6020p2v_1, pos1, measure_p1);
-	float v2 = pid_calculate(&pid_6020p2v_2, pos2, measure_p2);
-	float v3 = pid_calculate(&pid_6020p2v_3, pos3, measure_p3);
-	float v4 = pid_calculate(&pid_6020p2v_4, pos4, measure_p4);
+	static float vel_cmd[4] = {0};
+	vel_cmd[0] = pid_calculate(&pid_6020p2v_1, pos[0], measure_p1);
+	vel_cmd[1] = pid_calculate(&pid_6020p2v_2, pos[1], measure_p2);
+	vel_cmd[2] = pid_calculate(&pid_6020p2v_3, pos[2], measure_p3);
+	vel_cmd[3] = pid_calculate(&pid_6020p2v_4, pos[3], measure_p4);
 
-	return dji6020_set_vel(v1, v2, v3, v4);
+	return dji6020_set_vel(vel_cmd);
 }

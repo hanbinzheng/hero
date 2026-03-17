@@ -60,6 +60,9 @@ void get_cmd(float pos[4], float vel[4], float pos_cmd[4], float vel_cmd[4])
 			pos_cmd[i] = set_in_range(pos[i] + PI);
 			vel_cmd[i] = -vel[i] * wheel_direction[i] / RADIUS;
 		}
+
+		float error = pos_cmd[i] - pos_measure[i];
+		vel_cmd[i] = vel_cmd[i] * arm_cos_f32(error);
 	}
 }
 
@@ -69,8 +72,10 @@ void chassis_task()
 	static float pos_raw[4], pos_cmd[4], vel_raw[4], vel_cmd[4];
 
 	if (dbus_data.sw1 == SW_UP) {
-		dji6020_set_pos(PI / 4, -PI / 4, PI / 4, -PI / 4);
-		dji3508_set_chassis_vel(0, 0, 0, 0);
+		static float safe_vel[4] = {0, 0, 0, 0};
+		static float safe_pos[4] = {PI / 4, -PI / 4, PI / 4, -PI / 4};
+		dji6020_set_pos(safe_pos);
+		dji3508_set_chassis_vel(safe_vel);
 		return;
 	}
 
@@ -86,6 +91,6 @@ void chassis_task()
 	v_limit(vel_cmd);
 
 	/* send command */
-	dji3508_set_chassis_vel(vel_cmd[0], vel_cmd[1], vel_cmd[2], vel_cmd[3]);
-	dji6020_set_pos(pos_cmd[0], pos_cmd[1], pos_cmd[2], pos_cmd[3]);
+	dji3508_set_chassis_vel(vel_cmd);
+	dji6020_set_pos(pos_cmd);
 }

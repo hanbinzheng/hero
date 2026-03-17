@@ -34,5 +34,29 @@ void fdcan1_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff) {
 			break;
 	}
 }
-// void fdcan2_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
+
+void fdcan2_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff) {
+		switch (header->Identifier) {
+		case 0x201:
+			dji_motor_interpret(buff, &dji3508_5);
+			break;
+		case 0x202:
+			dji_motor_interpret(buff, &dji3508_6);
+			break;
+		case 0x203:
+			dji_motor_interpret(buff, &dji3508_7);
+			break;
+		case 0x204:
+			dji_motor_interpret(buff, &dji3508_8);
+			break;
+		case 0x205:
+			dji_motor_interpret(buff, &dji3508_9);
+			break;
+		case 0x206:
+			dji_motor_interpret(buff, &dji3508_10);
+			break;
+		default:
+			break;
+	}
+}
 // void fdcan3_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff);
