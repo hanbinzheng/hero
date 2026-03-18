@@ -74,12 +74,16 @@ Core/Src/syscalls.c \
 bsp/Src/bsp_fdcan.c \
 bsp/Src/bsp_usart.c \
 bsp/Src/bsp_dwt.c \
+bsp/Src/bsp_spi.c \
 device/Src/dbus.c \
 device/Src/vt03.c \
 device/Src/dji_motor.c \
 device/Src/motor.c \
+device/Src/imu.c \
 algorithm/Src/pid.c \
 algorithm/Src/kinematics.c \
+algorithm/Src/quaternion.c \
+algorithm/Src/mahony.c \
 application/Src/chassis.c
 
 # ASM sources
