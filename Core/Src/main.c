@@ -27,7 +27,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "bsp_fdcan.h"
+#include "bsp_usart.h"
+#include "string.h"
+#include "dji_motor.h"
+#include "dbus.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +52,10 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+int tx_status = 114514;
+float ref_vel = 0;
+float measure_pos;
+float ref_pos;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,14 +110,20 @@ int main(void)
   MX_TIM12_Init();
   MX_TIM15_Init();
   MX_FDCAN2_Init();
+  MX_UART7_Init();
   /* USER CODE BEGIN 2 */
-
+  usart_init();
+  can_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	HAL_Delay(1);
+	ref_pos = dbus_data.ls_x * 3.1415926;
+	measure_pos = update_pos(&dji6020_1, 6871);
+	tx_status = dji6020_set_pos(ref_pos, 0, 0, 0);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
