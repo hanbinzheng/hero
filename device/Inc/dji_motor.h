@@ -4,7 +4,7 @@
 #include "main.h"
 #include <stdint.h>
 
-#define GM6020_ANGLE_OFFSET_1 8130
+#define GM6020_ANGLE_OFFSET_1 4041
 #define GM6020_ANGLE_OFFSET_2 50
 #define GM6020_ANGLE_OFFSET_3 657
 #define GM6020_ANGLE_OFFSET_4 4090
@@ -21,7 +21,6 @@
 #define GM6020_VOLTAGE_FLOAT_TO_INT(value)                                               \
 	((int16_t)((value) * 25000.0f / 24.0f)) // -24v~0~24v, -25000~0~25000
 // #define GM6020_VOLTAGE_FLOAT_TO_INT(value) (int16_t)((value)) // -25000~0~25000
-#define GM6020_LINEAR_RATE (0.5f)
 
 // M3508
 #define M3508_CURRENT_FLOAT_TO_INT(value)                                                \

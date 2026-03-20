@@ -1,6 +1,9 @@
 #include "dji_motor.h"
 #include "bsp_fdcan.h"
 #include "pid.h"
+#include "math.h"
+
+int debug_motor = 0;
 
 /*
  **************************************************************************
@@ -37,22 +40,22 @@ static struct pid_info pid_3508v2c_4 = {
 
 /* chassis 6020 motor pid*/
 static struct pid_info pid_6020v2v_1 = {
-    .kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
+    .kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 1.5f, .out_limit = 20};
 static struct pid_info pid_6020v2v_2 = {
-    .kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
+    .kp = 1.0f, .ki = 0.1f, .kd = 0, .i_limit = 1.5f, .out_limit = 20};
 static struct pid_info pid_6020v2v_3 = {
-    .kp = 1.1f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
+    .kp = 1.0f, .ki = 0.12f, .kd = 0, .i_limit = 1.2f, .out_limit = 20};
 static struct pid_info pid_6020v2v_4 = {
-    .kp = 1.0f, .ki = 0.1f, .kd = 0, .i_limit = 0.2f, .out_limit = 20};
+    .kp = 1.2f, .ki = 0.1f, .kd = 0, .i_limit = 1.5f, .out_limit = 20};
 
-static struct pid_info pid_6020p2v_1 = {
-    .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
-static struct pid_info pid_6020p2v_2 = {
-    .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
-static struct pid_info pid_6020p2v_3 = {
-    .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
-static struct pid_info pid_6020p2v_4 = {
-    .kp = 10.0f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+// static volatile struct pid_info pid_6020p2v_1 = {
+//     .kp = 7.5f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+// static volatile struct pid_info pid_6020p2v_2 = {
+//     .kp = 7.5f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+// static volatile struct pid_info pid_6020p2v_3 = {
+//     .kp = 7.5f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
+// static volatile struct pid_info pid_6020p2v_4 = {
+//     .kp = 7.5f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
 
 /* armor friction 3508 pid */
 static struct pid_info pid_3508v2c_5 = {
@@ -192,13 +195,13 @@ HAL_StatusTypeDef dji6020_set_vel(float vel[4])
 	/* 0x1FF */
 
 	float volt_1 =
-	    pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) + GM6020_LINEAR_RATE * vel[0];
+	    pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) + 0.45 * vel[0]; /* 0.45: fore feedback */
 	float volt_2 =
-	    pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + GM6020_LINEAR_RATE * vel[1];
+	    pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + 0.5 * vel[1];
 	float volt_3 =
-	    pid_calculate(&pid_6020v2v_3, vel[2], dji6020_3.vel) + GM6020_LINEAR_RATE * vel[2];
+	    pid_calculate(&pid_6020v2v_3, vel[2], dji6020_3.vel) + 0.5 * vel[2];
 	float volt_4 =
-	    pid_calculate(&pid_6020v2v_4, vel[3], dji6020_4.vel) + GM6020_LINEAR_RATE * vel[3];
+	    pid_calculate(&pid_6020v2v_4, vel[3], dji6020_4.vel) + 0.45 * vel[3];
 
 	uint16_t volt_int_1 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_1);
 	uint16_t volt_int_2 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_2);
@@ -218,24 +221,54 @@ HAL_StatusTypeDef dji6020_set_vel(float vel[4])
 	return can_transmit(&hfdcan1, 0x1FF, CAN_ID_STD, data);
 }
 
+struct ramp_pos {
+	float kp;
+	float step;
+	float smoothed_ref;
+	float out_limit;
+};
+
+static struct ramp_pos pos_control[4] = {
+	{.kp = 5, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
+	{.kp = 7.5, .step = 0.6, .smoothed_ref = 0, .out_limit = 15},
+	{.kp = 7, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
+	{.kp = 5.5, .step = 0.4, .smoothed_ref = 0, .out_limit = 15}
+};
+
 /* pos1 ... pos4 should within - pi ~ pi */
 HAL_StatusTypeDef dji6020_set_pos(float pos[4])
 {
-	float measure_p1 = dji_get_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
-	float measure_p2 = dji_get_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
-	float measure_p3 = dji_get_pos(&dji6020_3, GM6020_ANGLE_OFFSET_3);
-	float measure_p4 = dji_get_pos(&dji6020_4, GM6020_ANGLE_OFFSET_4);
+	debug_motor++;
+	static float measure[4], vel_cmd[4];
+	measure[0] = dji_get_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
+	measure[1] = dji_get_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
+	measure[2] = dji_get_pos(&dji6020_3, GM6020_ANGLE_OFFSET_3);
+	measure[3] = dji_get_pos(&dji6020_4, GM6020_ANGLE_OFFSET_4);
 
-	pos[0] = update_pos_ref(pos[0], measure_p1);
-	pos[1] = update_pos_ref(pos[1], measure_p2);
-	pos[2] = update_pos_ref(pos[2], measure_p3);
-	pos[3] = update_pos_ref(pos[3], measure_p4);
+	for (int i = 0; i < 4; i++) {
+		/* make sure that smoothed_ref is within - pi ~ pi initially */
+		static volatile float ref_diff = 0, vel_out = 0;
+		pos[i] = update_pos_ref(pos[i], measure[i]);
+		pos_control[i].smoothed_ref = update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
+		ref_diff = pos[i] - pos_control[i].smoothed_ref;
+		if (ref_diff > pos_control[i].step) {
+			pos_control[i].smoothed_ref += pos_control[i].step;
+		} else if (ref_diff < - pos_control[i].step) {
+			pos_control[i].smoothed_ref -= pos_control[i].step;
+		} else {
+			pos_control[i].smoothed_ref = pos[i];
+		}
 
-	static float vel_cmd[4] = {0};
-	vel_cmd[0] = pid_calculate(&pid_6020p2v_1, pos[0], measure_p1);
-	vel_cmd[1] = pid_calculate(&pid_6020p2v_2, pos[1], measure_p2);
-	vel_cmd[2] = pid_calculate(&pid_6020p2v_3, pos[2], measure_p3);
-	vel_cmd[3] = pid_calculate(&pid_6020p2v_4, pos[3], measure_p4);
+		pos_control[i].smoothed_ref = update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
+		vel_out = pos_control[i].kp * (pos_control[i].smoothed_ref - measure[i]);
+		if (vel_out > pos_control[i].out_limit) {
+			vel_cmd[i] = pos_control[i].out_limit;
+		} else if (vel_out < - pos_control[i].out_limit) {
+			vel_cmd[i] = - pos_control[i].out_limit;
+		} else {
+			vel_cmd[i] = vel_out;
+		}
+	}
 
 	return dji6020_set_vel(vel_cmd);
 }
