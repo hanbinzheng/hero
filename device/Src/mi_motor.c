@@ -104,9 +104,9 @@ HAL_StatusTypeDef mi_send_command(float trq, float pos, float vel, float kp,
 	limit(&kd, 0.0f, 5.0f);
 	uint16_t kd_int = (uint16_t)(kd * (65536.0f / 5.0f));
 
-	limit(&trq, 12.0f, -12.0f);
-	limit(&vel, 30.0f, -30.0f);
-	limit(&pos, 4 * PI, -4 * PI);
+	limit(&trq, -12.0f, 12.0f);
+	limit(&vel, -30.0f, 30.0f);
+	limit(&pos, -4 * PI, 4 * PI);
 	int32_t pos_int = (int32_t)(pos * (32768.0f / (4 * PI))) + 32767;
 	int32_t vel_int = (int32_t)(vel * (32768.0f / 30.0f)) + 32767;
 	uint16_t trq_int = (uint16_t)((int32_t)(trq * (32768.0f / 12.0f)) + 32767);
