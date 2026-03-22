@@ -1,9 +1,7 @@
 #include "dji_motor.h"
 #include "bsp_fdcan.h"
-#include "pid.h"
 #include "math.h"
-
-int debug_motor = 0;
+#include "pid.h"
 
 /*
  **************************************************************************
@@ -11,22 +9,22 @@ int debug_motor = 0;
  **************************************************************************
  */
 /* chassis motors */
-struct motor_info dji3508_1 = {.type = M3508};
-struct motor_info dji3508_2 = {.type = M3508};
-struct motor_info dji3508_3 = {.type = M3508};
-struct motor_info dji3508_4 = {.type = M3508};
-struct motor_info dji6020_1 = {.type = GM6020};
-struct motor_info dji6020_2 = {.type = GM6020};
-struct motor_info dji6020_3 = {.type = GM6020};
-struct motor_info dji6020_4 = {.type = GM6020};
+struct dji_motor dji3508_1 = {.type = M3508};
+struct dji_motor dji3508_2 = {.type = M3508};
+struct dji_motor dji3508_3 = {.type = M3508};
+struct dji_motor dji3508_4 = {.type = M3508};
+struct dji_motor dji6020_1 = {.type = GM6020};
+struct dji_motor dji6020_2 = {.type = GM6020};
+struct dji_motor dji6020_3 = {.type = GM6020};
+struct dji_motor dji6020_4 = {.type = GM6020};
 
 /* armor friction motors */
-struct motor_info dji3508_5 = {.type = M3508};
-struct motor_info dji3508_6 = {.type = M3508};
-struct motor_info dji3508_7 = {.type = M3508};
-struct motor_info dji3508_8 = {.type = M3508};
-struct motor_info dji3508_9 = {.type = M3508};
-struct motor_info dji3508_10 = {.type = M3508};
+struct dji_motor dji3508_5 = {.type = M3508};
+struct dji_motor dji3508_6 = {.type = M3508};
+struct dji_motor dji3508_7 = {.type = M3508};
+struct dji_motor dji3508_8 = {.type = M3508};
+struct dji_motor dji3508_9 = {.type = M3508};
+struct dji_motor dji3508_10 = {.type = M3508};
 
 /* chassis 3508 motor pid */
 static struct pid_info pid_3508v2c_1 = {
@@ -71,8 +69,7 @@ static struct pid_info pid_3508v2c_9 = {
 static struct pid_info pid_3508v2c_10 = {
     .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
 
-
-float dji_get_pos(struct motor_info *motor, int offset)
+float dji_get_pos(struct dji_motor *motor, int offset)
 {
 	/* - pi ~ pi, where offset is the zero part*/
 	int angle = motor->raw_pos - offset;
@@ -98,7 +95,7 @@ static float update_pos_ref(float ref, float measure)
 	return ref;
 }
 
-void dji_motor_interpret(uint8_t *rx_buff, struct motor_info *motor)
+void dji_motor_interpret(uint8_t *rx_buff, struct dji_motor *motor)
 {
 	// interpret feedback raw data
 	motor->raw_pos = (rx_buff[0] << 8) | rx_buff[1];
@@ -127,10 +124,14 @@ void dji_motor_interpret(uint8_t *rx_buff, struct motor_info *motor)
 HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4])
 {
 	/* 0x200 */
-	float c1 = pid_calculate(&pid_3508v2c_1, vel[0] * M3508_REDUC_RATE, dji3508_1.vel);
-	float c2 = pid_calculate(&pid_3508v2c_2, vel[1] * M3508_REDUC_RATE, dji3508_2.vel);
-	float c3 = pid_calculate(&pid_3508v2c_3, vel[2] * M3508_REDUC_RATE, dji3508_3.vel);
-	float c4 = pid_calculate(&pid_3508v2c_4, vel[3] * M3508_REDUC_RATE, dji3508_4.vel);
+	float c1 =
+	    pid_calculate(&pid_3508v2c_1, vel[0] * M3508_REDUC_RATE, dji3508_1.vel);
+	float c2 =
+	    pid_calculate(&pid_3508v2c_2, vel[1] * M3508_REDUC_RATE, dji3508_2.vel);
+	float c3 =
+	    pid_calculate(&pid_3508v2c_3, vel[2] * M3508_REDUC_RATE, dji3508_3.vel);
+	float c4 =
+	    pid_calculate(&pid_3508v2c_4, vel[3] * M3508_REDUC_RATE, dji3508_4.vel);
 
 	uint16_t c1_int = M3508_CURRENT_FLOAT_TO_INT(c1);
 	uint16_t c2_int = M3508_CURRENT_FLOAT_TO_INT(c2);
@@ -150,7 +151,8 @@ HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4])
 	return can_transmit(&hfdcan1, 0x200, CAN_ID_STD, data);
 }
 
-HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6]) {
+HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6])
+{
 	/* 0x200 + 0x1FF */
 	float c1 = pid_calculate(&pid_3508v2c_5, vel[0], dji3508_5.vel);
 	float c2 = pid_calculate(&pid_3508v2c_6, vel[1], dji3508_6.vel);
@@ -182,7 +184,7 @@ HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6]) {
 
 	uint8_t ret1 = can_transmit(&hfdcan2, 0x200, CAN_ID_STD, data1);
 	uint8_t ret2 = can_transmit(&hfdcan2, 0x1FF, CAN_ID_STD, data2);
-	
+
 	if (ret1 == HAL_OK && ret2 == HAL_OK) {
 		return HAL_OK;
 	} else {
@@ -194,8 +196,8 @@ HAL_StatusTypeDef dji6020_set_vel(float vel[4])
 {
 	/* 0x1FF */
 
-	float volt_1 =
-	    pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) + 0.45 * vel[0]; /* 0.45: fore feedback */
+	float volt_1 = pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) +
+		       0.45 * vel[0]; /* 0.45: fore feedback */
 	float volt_2 =
 	    pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + 0.5 * vel[1];
 	float volt_3 =
@@ -229,16 +231,14 @@ struct ramp_pos {
 };
 
 static struct ramp_pos pos_control[4] = {
-	{.kp = 5, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
-	{.kp = 7.5, .step = 0.6, .smoothed_ref = 0, .out_limit = 15},
-	{.kp = 7, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
-	{.kp = 5.5, .step = 0.4, .smoothed_ref = 0, .out_limit = 15}
-};
+    {.kp = 5, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
+    {.kp = 7.5, .step = 0.6, .smoothed_ref = 0, .out_limit = 15},
+    {.kp = 7, .step = 0.5, .smoothed_ref = 0, .out_limit = 15},
+    {.kp = 5.5, .step = 0.4, .smoothed_ref = 0, .out_limit = 15}};
 
 /* pos1 ... pos4 should within - pi ~ pi */
 HAL_StatusTypeDef dji6020_set_pos(float pos[4])
 {
-	debug_motor++;
 	static float measure[4], vel_cmd[4];
 	measure[0] = dji_get_pos(&dji6020_1, GM6020_ANGLE_OFFSET_1);
 	measure[1] = dji_get_pos(&dji6020_2, GM6020_ANGLE_OFFSET_2);
@@ -249,22 +249,25 @@ HAL_StatusTypeDef dji6020_set_pos(float pos[4])
 		/* make sure that smoothed_ref is within - pi ~ pi initially */
 		static volatile float ref_diff = 0, vel_out = 0;
 		pos[i] = update_pos_ref(pos[i], measure[i]);
-		pos_control[i].smoothed_ref = update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
+		pos_control[i].smoothed_ref =
+		    update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
 		ref_diff = pos[i] - pos_control[i].smoothed_ref;
 		if (ref_diff > pos_control[i].step) {
 			pos_control[i].smoothed_ref += pos_control[i].step;
-		} else if (ref_diff < - pos_control[i].step) {
+		} else if (ref_diff < -pos_control[i].step) {
 			pos_control[i].smoothed_ref -= pos_control[i].step;
 		} else {
 			pos_control[i].smoothed_ref = pos[i];
 		}
 
-		pos_control[i].smoothed_ref = update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
-		vel_out = pos_control[i].kp * (pos_control[i].smoothed_ref - measure[i]);
+		pos_control[i].smoothed_ref =
+		    update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
+		vel_out =
+		    pos_control[i].kp * (pos_control[i].smoothed_ref - measure[i]);
 		if (vel_out > pos_control[i].out_limit) {
 			vel_cmd[i] = pos_control[i].out_limit;
-		} else if (vel_out < - pos_control[i].out_limit) {
-			vel_cmd[i] = - pos_control[i].out_limit;
+		} else if (vel_out < -pos_control[i].out_limit) {
+			vel_cmd[i] = -pos_control[i].out_limit;
 		} else {
 			vel_cmd[i] = vel_out;
 		}
