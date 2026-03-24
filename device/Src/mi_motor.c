@@ -5,6 +5,11 @@
 #define PI (3.14159265358979f)
 #endif
 
+#define MI_POS_MAX (-1.2981f)
+#define MI_POS_MIN (-0.3179f)
+#define MI_DIFF_MAX (PI / 6)
+#define PITCH_TOTAL_SCALE (0.98023f) /* evaluation - depression */
+
 int mi_enabled = 114514;
 int mi_reception = 0;
 
@@ -12,6 +17,10 @@ struct mi_motor mi_motor = {
     .motor_id = 0x01,
     .error_bits = 0x00,
     .mode = MI_DISABLED,
+
+    /* MIT control parameters */
+    .kp = 40.0f,
+    .kd = 2.0f,
 };
 
 static inline void limit(float *value, float min, float max)
@@ -123,4 +132,16 @@ HAL_StatusTypeDef mi_send_command(float trq, float pos, float vel, float kp,
 
 	uint32_t identifier = (1 << 24) | (trq_int << 8) | mi_motor.motor_id;
 	return can_transmit(&hfdcan3, identifier, CAN_ID_EXT, tx_data);
+}
+
+HAL_StatusTypeDef mi_set_pos(float pos)
+{
+	float pos_measure = mi_motor.pos;
+	if (pos - pos_measure >= MI_DIFF_MAX) {
+		pos = pos_measure + MI_DIFF_MAX;
+	} else if (pos - pos_measure <= - MI_DIFF_MAX) {
+		pos = pos_measure - MI_DIFF_MAX;
+	}
+
+	return mi_send_command(0.0f, pos, 2, -1, -1); /* vel = 2, kp and kd: default value */
 }
