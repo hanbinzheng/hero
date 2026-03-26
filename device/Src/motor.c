@@ -32,6 +32,9 @@ void fdcan1_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff)
 		break;
 	case 0x0B:
 		dm_motor_interpret(buff, 0, &dm4310);
+	case 0x301:
+		dm_motor_interpret(buff, 1, &dm6006);
+		break;
 	default:
 		break;
 	}
