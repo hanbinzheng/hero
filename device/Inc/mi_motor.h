@@ -47,6 +47,7 @@ void mi_motor_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *rx_buff,
 			struct mi_motor *mi);
 HAL_StatusTypeDef mi_send_command(float trq, float pos, float vel, float kp,
 				  float kd);
+HAL_StatusTypeDef mi_set_pos(float pos);
 extern struct mi_motor mi_motor;
 
 #endif /* MI_H_ */

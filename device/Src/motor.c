@@ -1,5 +1,6 @@
 #include "bsp_fdcan.h"
 #include "dji_motor.h"
+#include "dm_motor.h"
 #include "mi_motor.h"
 
 void fdcan1_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff)
@@ -29,6 +30,8 @@ void fdcan1_data_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *buff)
 	case 0x208:
 		dji_motor_interpret(buff, &dji6020_4);
 		break;
+	case 0x0B:
+		dm_motor_interpret(buff, 0, &dm4310);
 	default:
 		break;
 	}
