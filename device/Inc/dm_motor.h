@@ -47,7 +47,8 @@ HAL_StatusTypeDef dm4310_enable(void);
 HAL_StatusTypeDef dm4310_disable(void);
 HAL_StatusTypeDef dm4310_send_command(float pos, float vel);
 HAL_StatusTypeDef dm6006_set_vel(float vel);
-HAL_StatusTypeDef dm6006_set_pos(float pos);
+float dm6006_get_pos(int pos);
+float dm6006_set_pos(float pos);
 
 extern struct dm_motor dm4310;
 extern struct dm_motor dm6006;
