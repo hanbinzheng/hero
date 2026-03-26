@@ -80,12 +80,15 @@ device/Src/vt03.c \
 device/Src/motor.c \
 device/Src/imu.c \
 device/Src/mi_motor.c \
+device/Src/dm_motor.c \
 device/Src/dji_motor.c \
 algorithm/Src/pid.c \
 algorithm/Src/kinematics.c \
 algorithm/Src/quaternion.c \
 algorithm/Src/mahony.c \
-application/Src/chassis.c
+application/Src/chassis.c \
+application/Src/gimbal.c \
+application/Src/armor.c
 
 # ASM sources
 ASM_SOURCES =  \
