@@ -1,5 +1,5 @@
-#ifndef MOTOR_H__
-#define MOTOR_H__
+#ifndef DJI_MOTOR_H_
+#define DJI_MOTOR_H_
 
 #include "main.h"
 #include <stdint.h>
@@ -33,7 +33,7 @@
 	((int16_t)((value) * 10000.0f / 10.0f)) // -10A~0~10A, -10000~0~10000
 #define M2006_CURRENT_INT_TO_FLOAT(value) ((float)(value) * 10.0f / 10000.0f)
 
-enum motor_type {
+enum dji_motor_type {
 	M3508,
 	M2006,
 	GM6020,
@@ -49,7 +49,7 @@ struct dji_motor {
 	float vel; // rad/s
 	float cur; // A
 
-	enum motor_type type;
+	enum dji_motor_type type;
 };
 
 void dji_motor_interpret(uint8_t *rx_buff, struct dji_motor *motor);
@@ -75,4 +75,4 @@ extern struct dji_motor dji6020_2;
 extern struct dji_motor dji6020_3;
 extern struct dji_motor dji6020_4;
 
-#endif // MOTOR_H__
+#endif /* DJI_MOTOR_H_ */
