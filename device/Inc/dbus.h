@@ -66,6 +66,5 @@ struct dbus_data {
 };
 
 extern struct dbus_data dbus_data;
-extern uint32_t dbus_tick;
 
 #endif // DBUS_H_
