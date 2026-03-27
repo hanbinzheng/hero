@@ -1,5 +1,6 @@
 #include "dbus.h"
 #include "main.h"
+#include "iwdg.h"
 #include <stdint.h>
 
 /*
@@ -21,13 +22,13 @@
 **************************************************************************
 */
 // DMA1 and DMA2 cannot access DTCM for STM32H7 series, here change to D2SRAM
-uint32_t dbus_tick;
 struct dbus_data dbus_data;
 
 static void dbus_data_interpret(uint8_t *buff, struct dbus_data *dbus_data)
 {
-	// get tick to feed the dog
-	dbus_tick = HAL_GetTick();
+	// feed the dog
+	HAL_IWDG_Refresh(&hiwdg1);
+	control_ready = 1;
 
 	dbus_data->rs_y =
 	    (((buff[0] | (buff[1] << 8)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;

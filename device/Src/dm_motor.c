@@ -6,6 +6,9 @@
 struct dm_motor dm4310; /* master id: 0x0B, can id: 0x01 */
 struct dm_motor dm6006;
 
+#define DM6006_ZERO (4242)
+#define DM6006_DIFF_MAX (0.50f)
+
 /*
 static inline uint16_t float_to_uint(float x, float x_min, float x_max, uint8_t bits)
 {
@@ -28,13 +31,14 @@ static void feedback_interpret_1t4(uint8_t *rx_buff, struct dm_motor *motor)
 {
 	motor->raw_pos = (uint16_t)((rx_buff[0] << 8) | rx_buff[1]);
 	motor->raw_vel = (uint16_t)((rx_buff[2] << 8) | rx_buff[3]);
-	motor->raw_cur = (int16_t)((rx_buff[4] << 8) | rx_buff[5]); /* mA */
+	motor->raw_cur = (uint16_t)((rx_buff[4] << 8) | rx_buff[5]); /* mA */
 	motor->temp_motor = rx_buff[6];
 	motor->state = rx_buff[7];
 
 	motor->pos = ANGLE_TO_RADS(motor->raw_pos);
-	motor->vel = RPM_TO_RADS(motor->raw_vel) / 100.0f; /* 100 vel, in rpm */
-	motor->cur = (float)motor->raw_cur / 1000.0f;	   /* A */
+	motor->vel =
+	    RPM_TO_RADS((int16_t)motor->raw_vel) / 100.0f; /* 100 vel, in rpm */
+	motor->cur = (float)((int16_t)motor->raw_cur) / 1000.0f; /* A */
 }
 
 /* general damiao motor data interpretation */
@@ -91,13 +95,74 @@ HAL_StatusTypeDef dm4310_send_command(float pos, float vel)
 
 /* control for dm6006 */
 static struct pid_info pid_6006_v2c = {
-    .kp = 0.0f, .ki = 0.0f, .kd = 0.0f, .i_limit = 0.0f, .out_limit = 1.0f};
+    .kp = 0.15f, .ki = 0.001f, .kd = 0.0f, .i_limit = 0.2f, .out_limit = 1.0f};
 static struct pid_info pid_6006_p2v = {
-    .kp = 0.0f, .ki = 0.0f, .kd = 0.0f, .i_limit = 0.0f, .out_limit = 0.0f};
+    .kp = 10.0f, .ki = 0.0f, .kd = 800.0f, .i_limit = 0.0f, .out_limit = 15.0f};
 
-// HAL_StatusTypeDef dm6006_set_vel(float vel) /*  can id: 0x3FE */
-// {
-// 	/* true current: limited to [0, 1] */
-// 	float cur = pid_calculate(&pid_6006_v2c, vel, dm6006.vel);
-// 	uint16_t cur_int = (uint16_t)(cur * 10000);
-// }
+static int16_t dm6006_float_to_int(float value, uint16_t scale)
+{
+	/* value should be limited to -1 and 1 */
+	if (value > 1.0f) {
+		value = 1.0f;
+	} else if (value < -1.0f) {
+		value = -1.0f;
+	}
+
+	value = value * scale;
+	return (int16_t)value;
+}
+
+HAL_StatusTypeDef dm6006_set_vel(float vel) /*  can id: 0x3FE */
+{
+	/* cur: -1.0 ~ 1.0 */
+	static uint8_t low, high;
+	float cur = pid_calculate(&pid_6006_v2c, vel, -dm6006.vel);
+	int16_t cur_int = dm6006_float_to_int(cur, 0x1800);
+	uint8_t tx_buff[8] = {0};
+	low = (uint8_t)(cur_int & 0x00FF); /* low 8 bits */
+	high = (uint8_t)(cur_int >> 8);	   /* high 8 bits */
+	tx_buff[0] = low;
+	tx_buff[1] = high;
+	return can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, tx_buff);
+}
+
+float dm6006_get_pos(int pos)
+{
+	pos = DM6006_ZERO - pos;
+	while (pos >= 4096) {
+		pos -= 8192;
+	}
+	while (pos <= -4096) {
+		pos += 8192;
+	}
+	return pos / 4096.0f * 3.14159265358979f;
+}
+
+static float update_pos_ref(float ref, float measure)
+{
+	while (ref - measure >= PI) {
+		ref -= 2 * PI;
+	}
+
+	while (ref - measure <= -PI) {
+		ref += 2 * PI;
+	}
+
+	return ref;
+}
+
+float dm6006_set_pos(float pos) /*  can id: 0x3FE */
+{
+	static volatile float pos_measure = 0;
+	pos_measure = dm6006_get_pos(dm6006.raw_pos);
+	pos = update_pos_ref(pos, pos_measure);
+
+	// if (pos - pos_measure >= DM6006_DIFF_MAX) {
+	// 	pos = pos_measure + DM6006_DIFF_MAX;
+	// } else if (pos - pos_measure <= -DM6006_DIFF_MAX) {
+	// 	pos = pos_measure - DM6006_DIFF_MAX;
+	// }
+
+	float vel = pid_calculate(&pid_6006_p2v, pos, pos_measure);
+	return dm6006_set_vel(vel);
+}

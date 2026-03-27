@@ -1,5 +1,6 @@
 #include "armor.h"
 #include "dbus.h"
+#include "vt03.h"
 #include "dji_motor.h"
 #include "dm_motor.h"
 
@@ -52,7 +53,7 @@ void armor_task(void)
 	static volatile float vel_armor = DM4310_VEL_MAX;
 
 	/* safe mode */
-	if (dbus_data.sw1 == SW_UP) {
+	if (vt03_data.mode_sw == MODE_S) {
 		dm4310_send_command(0.0f, 0.0f); /* vel = 0, remain still */
 		dji3508_set_armor_vel(vel_stop);
 		return;
@@ -60,14 +61,14 @@ void armor_task(void)
 
 	/* control loop for armor booster, 25hz */
 	if (armor_count % 5 == 0) {
-		pos_armor += dbus_data.rs_y * ARMOR_SENSITIVITY;
+		pos_armor += vt03_data.rs_y * ARMOR_SENSITIVITY;
 		dm4310_send_command(pos_armor, vel_armor);
 	} else if (armor_count == 124) { /* a loop: enable it */
 		dm4310_enable();
 	}
 
 	/* armor friction control */
-	if (dbus_data.sw2 == SW_UP) {
+	if (vt03_data.mode_sw == MODE_N) {
 		dji3508_set_armor_vel(vel_friction_base);
 
 		/* slowly update velocity */

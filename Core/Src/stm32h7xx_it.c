@@ -22,6 +22,10 @@
 #include "stm32h7xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdint.h>
+#include "armor.h"
+#include "chassis.h"
+#include "gimbal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +45,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+static uint64_t tim5_count = 0;
+static uint64_t tim12_count = 0;
+static uint64_t tim15_count = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -284,7 +290,10 @@ void TIM4_IRQHandler(void)
 void TIM8_BRK_TIM12_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
-
+  tim12_count++;
+  if (system_ready && control_ready) {
+	chassis_task();
+  }
   /* USER CODE END TIM8_BRK_TIM12_IRQn 0 */
   HAL_TIM_IRQHandler(&htim12);
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
@@ -298,7 +307,10 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 void TIM5_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM5_IRQn 0 */
-
+  tim5_count++;
+if (system_ready && control_ready) {
+	gimbal_task();
+  }
   /* USER CODE END TIM5_IRQn 0 */
   HAL_TIM_IRQHandler(&htim5);
   /* USER CODE BEGIN TIM5_IRQn 1 */
@@ -340,7 +352,7 @@ void UART7_IRQHandler(void)
 void TIM15_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM15_IRQn 0 */
-
+  tim15_count++;
   /* USER CODE END TIM15_IRQn 0 */
   HAL_TIM_IRQHandler(&htim15);
   /* USER CODE BEGIN TIM15_IRQn 1 */

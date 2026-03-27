@@ -67,7 +67,8 @@ void Error_Handler(void);
 #define DEBUG_RX_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
-
+extern int system_ready;
+extern int control_ready; /* reception the control signal */
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

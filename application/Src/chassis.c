@@ -1,18 +1,23 @@
 #include "chassis.h"
 #include "arm_math.h"
 #include "dbus.h"
+#include "vt03.h"
 #include "dji_motor.h"
+#include "dm_motor.h"
 #include "kinematics.h"
 #include <math.h>
 
 #define RADIUS (0.059f)
 #define SENSITIVITY (2.0f)
-#define V_ROTATE (2.0f)
-#define V_THRESHOLD (2.0f)
+// #define V_ROTATE (3.0f)
+#define V_THRESHOLD (3.0f)
 #define V_UPDATE_MIN (0.05f)
 #define ABS(x) ((x > 0) ? (x) : (-x))
+#define R_CHASSIS (0.2518714354586482f)
+#define OMEGA (1.0f)
 
 static int const wheel_direction[4] = {1, -1, -1, 1};
+static uint64_t chassis_debug = 0;
 
 static void v_limit(float v[4])
 {
@@ -68,25 +73,31 @@ void get_cmd(float pos[4], float vel[4], float pos_cmd[4], float vel_cmd[4])
 
 void chassis_task()
 {
-	static float vx_cmd = 0, vy_cmd = 0, v_rotate = 0;
+	chassis_debug++; /* only for debug usage */
+	static float vx_cmd = 0, vy_cmd = 0, v_rotate = 0, yaw_diff = 0;
 	static float pos_raw[4], pos_cmd[4], vel_raw[4], vel_cmd[4];
 
-	if (dbus_data.sw1 == SW_UP) {
+	if (vt03_data.mode_sw == MODE_S) {
 		static float safe_vel[4] = {0, 0, 0, 0};
-		static float safe_pos[4] = {PI / 4, -PI / 4, PI / 4, -PI / 4};
+		static float safe_pos[4] = {-PI / 4, PI / 4, -PI / 4, PI / 4};
 		dji6020_set_pos(safe_pos);
 		dji3508_set_chassis_vel(safe_vel);
 		return;
+	} else if (vt03_data.mode_sw == MODE_C) {
+		// v_rotate = R_CHASSIS * OMEGA;
+		yaw_diff = dm6006_get_pos(dm6006.raw_pos);
+	} else {
+		v_rotate = 0;
+		yaw_diff = 0;
 	}
 
 	/* get command data */
-	vx_cmd = dbus_data.ls_x * SENSITIVITY;
-	vy_cmd = -dbus_data.ls_y * SENSITIVITY;
-	v_rotate = -dbus_data.rs_y * V_ROTATE;
+	vx_cmd = vt03_data.ls_x * SENSITIVITY;
+	vy_cmd = vt03_data.ls_y * SENSITIVITY;
 
 	/* interpret data into motor command */
 	float v_cmd[3] = {vx_cmd, vy_cmd, v_rotate};
-	kinematics_swerve(v_cmd, 0, pos_raw, vel_raw);
+	kinematics_swerve(v_cmd, yaw_diff, pos_raw, vel_raw);
 	get_cmd(pos_raw, vel_raw, pos_cmd, vel_cmd); /* shortest path */
 	v_limit(vel_cmd);
 
