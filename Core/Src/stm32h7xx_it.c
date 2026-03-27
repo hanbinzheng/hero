@@ -291,7 +291,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 0 */
   tim12_count++;
-  if (system_ready & control_ready) {
+  if (system_ready && control_ready) {
 	chassis_task();
   }
   /* USER CODE END TIM8_BRK_TIM12_IRQn 0 */

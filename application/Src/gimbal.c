@@ -1,5 +1,6 @@
 #include "gimbal.h"
 #include "dbus.h"
+#include "vt03.h"
 #include "imu.h"
 #include "dm_motor.h"
 #include "mi_motor.h"
@@ -56,7 +57,7 @@ void gimbal_task(void)
 	gimbal_count = (gimbal_count + 1) % 1000;
 
 	/* safe mode */
-	if (dbus_data.sw1 == SW_UP) {
+	if (vt03_data.mode_sw == MODE_S) {
 		mi_send_command(0.0f, 0.0f, 0.0f, 0.0f, 0.0f); /* velocity = 0: keep stable */
 		can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, dm6006_stop);
 
@@ -70,7 +71,7 @@ void gimbal_task(void)
 	}
 
 	/* yaw control */
-	pos_yaw += dbus_data.rs_y * YAW_SENSITIVITY;
+	pos_yaw += vt03_data.rs_y * YAW_SENSITIVITY;
 	correct_yaw_pos_ref(&pos_yaw);
 	dm6006_set_pos(pos_yaw);
 	// vel_yaw = dbus_data.ls_x * 12;
@@ -81,7 +82,7 @@ void gimbal_task(void)
 		mi_motor_enable();
 	} else {
 		/* pitch control */
-		pos_pitch += -dbus_data.rs_x * PITCH_SENSITIVITY;
+		pos_pitch += -vt03_data.rs_x * PITCH_SENSITIVITY;
 		limit(&pos_pitch, PITCH_DEPRESSION, PITCH_ELEVATION);
 		mi_set_pos(pos_pitch);
 	}

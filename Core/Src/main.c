@@ -1,25 +1,26 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2026 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2026 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "dma.h"
 #include "fdcan.h"
+#include "iwdg.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -27,11 +28,20 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "bsp_dwt.h"
+#include "bsp_tim.h"
 #include "bsp_fdcan.h"
 #include "bsp_usart.h"
-#include "string.h"
-#include "dji_motor.h"
+
 #include "dbus.h"
+#include "dji_motor.h"
+#include "dm_motor.h"
+#include "imu.h"
+#include "mi_motor.h"
+
+#include "armor.h"
+#include "chassis.h"
+#include "gimbal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -41,7 +51,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#ifndef PI
+#define PI (3.14159265358979f)
+#endif
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,10 +64,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+int system_ready = 0;
+int control_ready = 0;
 int tx_status = 114514;
 float ref_vel = 0;
 float measure_pos;
 float ref_pos;
+uint64_t count = 0;
+float trq = 0;
+float kp = 10;
+float kd = 0.5;
+float vel = 0;
+uint8_t cmd[8] = {0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -111,23 +131,34 @@ int main(void)
   MX_TIM15_Init();
   MX_FDCAN2_Init();
   MX_UART7_Init();
+  MX_IWDG1_Init();
   /* USER CODE BEGIN 2 */
-  usart_init();
-  can_init();
+	usart_init();
+	can_init();
+	tim_init();
+	imu_init();
+	dwt_init(480);
+	mi_motor_enable();
+	dm4310_enable();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	HAL_Delay(1);
-	ref_pos = dbus_data.ls_x * 3.1415926;
-	measure_pos = update_pos(&dji6020_1, 6871);
-	tx_status = dji6020_set_pos(ref_pos, 0, 0, 0);
+    system_ready = 1;
+	while (1) {
+		dwt_delay_ms(1);
+		count++;
+		// tx_status = can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, cmd);
+		// ref_vel = dbus_data.ls_x * 5;
+		// dm6006_set_vel(ref_vel);
+		// measure_pos = dm6006_get_pos(dm6006.raw_pos);
+		// measure_pos = dm6006_set_pos(0.0);
+		// tx_status = can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, cmd);
+		/*armor_task();*/
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -153,8 +184,9 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 2;
@@ -200,11 +232,11 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state
+	 */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
@@ -218,8 +250,9 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
   /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+	/* User can add his own implementation to report the file name and line
+	   number, ex: printf("Wrong parameters value: file %s on line %d\r\n", file,
+	   line) */
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
