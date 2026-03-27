@@ -7,6 +7,7 @@ struct dm_motor dm4310; /* master id: 0x0B, can id: 0x01 */
 struct dm_motor dm6006;
 
 #define DM6006_ZERO (4242)
+#define DM6006_DIFF_MAX (0.50f)
 
 /*
 static inline uint16_t float_to_uint(float x, float x_min, float x_max, uint8_t bits)
@@ -94,9 +95,9 @@ HAL_StatusTypeDef dm4310_send_command(float pos, float vel)
 
 /* control for dm6006 */
 static struct pid_info pid_6006_v2c = {
-    .kp = 0.15f, .ki = 0.001f, .kd = 0.0f, .i_limit = 0.1f, .out_limit = 1.0f};
+    .kp = 0.15f, .ki = 0.001f, .kd = 0.0f, .i_limit = 0.2f, .out_limit = 1.0f};
 static struct pid_info pid_6006_p2v = {
-    .kp = 8.0f, .ki = 0.0f, .kd = 0.0f, .i_limit = 0.0f, .out_limit = 15.0f};
+    .kp = 10.0f, .ki = 0.0f, .kd = 800.0f, .i_limit = 0.0f, .out_limit = 15.0f};
 
 static int16_t dm6006_float_to_int(float value, uint16_t scale)
 {
@@ -116,7 +117,7 @@ HAL_StatusTypeDef dm6006_set_vel(float vel) /*  can id: 0x3FE */
 	/* cur: -1.0 ~ 1.0 */
 	static uint8_t low, high;
 	float cur = pid_calculate(&pid_6006_v2c, vel, -dm6006.vel);
-	int16_t cur_int = dm6006_float_to_int(cur, 0x2000);
+	int16_t cur_int = dm6006_float_to_int(cur, 0x1800);
 	uint8_t tx_buff[8] = {0};
 	low = (uint8_t)(cur_int & 0x00FF); /* low 8 bits */
 	high = (uint8_t)(cur_int >> 8);	   /* high 8 bits */
@@ -155,6 +156,13 @@ float dm6006_set_pos(float pos) /*  can id: 0x3FE */
 	static volatile float pos_measure = 0;
 	pos_measure = dm6006_get_pos(dm6006.raw_pos);
 	pos = update_pos_ref(pos, pos_measure);
+
+	// if (pos - pos_measure >= DM6006_DIFF_MAX) {
+	// 	pos = pos_measure + DM6006_DIFF_MAX;
+	// } else if (pos - pos_measure <= -DM6006_DIFF_MAX) {
+	// 	pos = pos_measure - DM6006_DIFF_MAX;
+	// }
+
 	float vel = pid_calculate(&pid_6006_p2v, pos, pos_measure);
 	return dm6006_set_vel(vel);
 }
