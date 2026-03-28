@@ -43,7 +43,8 @@ struct uart_rx_config uart10_config = {
 	.interpret_func = uart10_data_interpret,
 };
 
-static void dma_rx_double_buff_init(UART_HandleTypeDef *huart, struct uart_rx_config *config)
+static HAL_StatusTypeDef dma_rx_double_buff_init(UART_HandleTypeDef *huart, 
+	struct uart_rx_config *config)
 {
 		/* UART IDLE reception mode */
 		huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;
@@ -54,12 +55,12 @@ static void dma_rx_double_buff_init(UART_HandleTypeDef *huart, struct uart_rx_co
 		__HAL_UART_ENABLE_IT(huart, UART_IT_IDLE);     /* Enable IDLE interrupt */
 
 		/* Configure DMA double buffer */
-		HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
+		return HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
 				   (uint32_t)config->buff1, (uint32_t)config->buff2, config->len_buff);
 }
 
-static void uart_rx_handler_double_dma(UART_HandleTypeDef *huart, 
-									uint16_t size, struct uart_rx_config *config)
+static void uart_rx_handler_double_dma(UART_HandleTypeDef *huart, uint16_t size, 
+	struct uart_rx_config *config)
 {
 		
 		__HAL_DMA_DISABLE(huart->hdmarx); /* Disable DMA */
@@ -80,10 +81,17 @@ static void uart_rx_handler_double_dma(UART_HandleTypeDef *huart,
 		__HAL_DMA_ENABLE(huart->hdmarx); /* Enable DMA */
 }
 
-void usart_init(void)
+HAL_StatusTypeDef usart_init(void)
 {
-	dma_rx_double_buff_init(&huart5, &uart5_config);
-	dma_rx_double_buff_init(&huart7, &uart7_config);
+	uint8_t return_value = HAL_OK;
+	if (HAL_OK != dma_rx_double_buff_init(&huart5, &uart5_config))
+		return_value = HAL_ERROR;
+	if (HAL_OK != dma_rx_double_buff_init(&huart7, &uart7_config))
+		return_value = HAL_ERROR;
+ 	if (HAL_OK != dma_rx_double_buff_init(&huart10, &uart10_config))
+		return_value = HAL_ERROR;
+
+	return return_value;
 }
 
 /* rewrite HAL UART RX Event callback function */ 
@@ -93,5 +101,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 		uart_rx_handler_double_dma(huart, Size, &uart5_config);
 	} else if (huart == &huart7) {
 		uart_rx_handler_double_dma(huart, Size, &uart7_config);
+	} else if (huart == &huart10) {
+		uart_rx_handler_double_dma(huart, Size, &uart10_config);
 	}
 }
