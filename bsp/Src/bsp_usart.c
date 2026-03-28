@@ -1,108 +1,97 @@
 #include "bsp_usart.h"
-
 #include <stdint.h>
 
-/* receive buffers */
-__attribute__((section(".dma12_buffer"))) uint8_t usart5_rx_buff[2][USART5_RX_FRAME_LEN];
-__attribute__((section(".dma12_buffer"))) uint8_t usart7_rx_buff[2][USART7_RX_FRAME_LEN];
+/* reference: https://zhuanlan.zhihu.com/p/720966722 */
+
+/* receiption buffers */
+__attribute__((section(".dma12_buffer"))) uint8_t uart5_rx_buff[2][UART5_RX_BUFF_LEN];
+__attribute__((section(".dma12_buffer"))) uint8_t uart7_rx_buff[2][UART7_RX_BUFF_LEN];
+__attribute__((section(".dma12_buffer"))) uint8_t uart10_rx_buff[2][UART10_RX_BUFF_LEN];
 
 /* weak functions for data interpretation */
-__weak void usart5_data_interpret(uint8_t *rx_buff);
-__weak void usart7_data_interpret(uint8_t *rx_buff);
+__weak void uart5_data_interpret(uint8_t *rx_buff, uint16_t received_len);
+__weak void uart7_data_interpret(uint8_t *rx_buff, uint16_t received_len);
+__weak void uart10_data_interpret(uint8_t *rx_buff, uint16_t received_len);
 
-static void dma_rx_double_buff_init(UART_HandleTypeDef *huart, uint32_t *first_buff,
-				    uint32_t *second_buff, uint32_t len_data)
+/* struct config for double dma setting */
+typedef void (*uart_interpret_func)(uint8_t *rx_buff, uint16_t received_len);
+struct uart_rx_config {
+	uint8_t *buff1;
+	uint8_t *buff2;
+	uint16_t len_buff;
+    uart_interpret_func interpret_func;    /* Data interpretation function for fixed length */
+};
+
+struct uart_rx_config uart5_config = {
+	.buff1 = uart5_rx_buff[0],
+	.buff2 = uart5_rx_buff[1],
+	.len_buff = UART5_RX_BUFF_LEN,
+	.interpret_func = uart5_data_interpret,
+};
+
+struct uart_rx_config uart7_config = {
+	.buff1 = uart7_rx_buff[0],
+	.buff2 = uart7_rx_buff[1],
+	.len_buff = UART7_RX_BUFF_LEN,
+	.interpret_func = uart7_data_interpret,
+};
+
+struct uart_rx_config uart10_config = {
+	.buff1 = uart10_rx_buff[0],
+	.buff2 = uart10_rx_buff[1],
+	.len_buff = UART10_RX_BUFF_LEN,
+	.interpret_func = uart10_data_interpret,
+};
+
+static void dma_rx_double_buff_init(UART_HandleTypeDef *huart, struct uart_rx_config *config)
 {
-	/* UART IDLE reception mode */
-	huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;
-	huart->RxEventType = HAL_UART_RXEVENT_IDLE;
+		/* UART IDLE reception mode */
+		huart->ReceptionType = HAL_UART_RECEPTION_TOIDLE;
+		huart->RxEventType = HAL_UART_RXEVENT_IDLE;
+		huart->RxXferSize = config->len_buff;
 
-	huart->RxXferSize = len_data; /* len_data = 2 x data */
+		SET_BIT(huart->Instance->CR3, USART_CR3_DMAR); /* Enable DMA */
+		__HAL_UART_ENABLE_IT(huart, UART_IT_IDLE);     /* Enable IDLE interrupt */
 
-	SET_BIT(huart->Instance->CR3, USART_CR3_DMAR); /* Enable DMA */
-	__HAL_UART_ENABLE_IT(huart, UART_IT_IDLE);     /* Enable IDLE interrupt */
-
-	/* Configure DMA double buffer */
-	HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
-				   (uint32_t)first_buff, (uint32_t)second_buff, len_data);
+		/* Configure DMA double buffer */
+		HAL_DMAEx_MultiBufferStart(huart->hdmarx, (uint32_t)&huart->Instance->RDR,
+				   (uint32_t)config->buff1, (uint32_t)config->buff2, config->len_buff);
 }
 
-static void uart5_rx_handler(UART_HandleTypeDef *huart, uint16_t size)
+static void uart_rx_handler_double_dma(UART_HandleTypeDef *huart, 
+									uint16_t size, struct uart_rx_config *config)
 {
-	__HAL_DMA_DISABLE(huart->hdmarx); /* Disable DMA */
+		
+		__HAL_DMA_DISABLE(huart->hdmarx); /* Disable DMA */
 
-	/* Check DMA current buffer */
-	if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) ==
-	    RESET) {
-		/* Change DMA buffer and reset NDTR */
-		((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+		/* Check DMA current buffer */
+		if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) ==
+	    		RESET) {
+				/* Change DMA buffer and reset NDTR */
+				((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
+		
+				config->interpret_func(config->buff1, size);
+		} else {
+				((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
+				config->interpret_func(config->buff2, size);
+		}
 
-		/* stm32h7xx_hal_uart.c, line 2392 */
-		__HAL_DMA_SET_COUNTER(huart->hdmarx, USART5_RX_BUFF_LEN);
-
-		/* Interpret data if full frame is received */
-		if (size == USART5_RX_FRAME_LEN)
-			usart5_data_interpret(usart5_rx_buff[0]);
-	} else {
-		/* Change buffer and reset NDTR */
-		((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-
-		__HAL_DMA_SET_COUNTER(huart->hdmarx, USART5_RX_BUFF_LEN);
-
-		if (size == USART5_RX_FRAME_LEN)
-			usart5_data_interpret(usart5_rx_buff[1]);
-	}
-
-	__HAL_DMA_ENABLE(huart->hdmarx); /* Enable DMA */
+		__HAL_DMA_SET_COUNTER(huart->hdmarx, config->len_buff); /* reset length */
+		__HAL_DMA_ENABLE(huart->hdmarx); /* Enable DMA */
 }
-
-static void uart7_rx_handler(UART_HandleTypeDef *huart, uint16_t size)
-{
-	__HAL_DMA_DISABLE(huart->hdmarx); /* Disable DMA */
-
-	/* Check DMA current buffer */
-	if (((((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR) & DMA_SxCR_CT) ==
-	    RESET) {
-		/* Change DMA buffer and reset NDTR */
-		((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR |= DMA_SxCR_CT;
-
-		/* stm32h7xx_hal_uart.c, line 2392 */
-		__HAL_DMA_SET_COUNTER(huart->hdmarx, USART7_RX_BUFF_LEN);
-
-		/* Interpret data if full frame is received */
-		if (size == USART7_RX_FRAME_LEN)
-			usart7_data_interpret(usart7_rx_buff[0]);
-	} else {
-		/* Change buffer and reset NDTR */
-		((DMA_Stream_TypeDef *)huart->hdmarx->Instance)->CR &= ~(DMA_SxCR_CT);
-
-		__HAL_DMA_SET_COUNTER(huart->hdmarx, USART7_RX_BUFF_LEN);
-
-		if (size == USART7_RX_FRAME_LEN)
-			usart7_data_interpret(usart7_rx_buff[1]);
-	}
-
-	__HAL_DMA_ENABLE(huart->hdmarx); /* Enable DMA */
-}
-
-// reference:
-// https://zhuanlan.zhihu.com/p/720966722
 
 void usart_init(void)
 {
-	dma_rx_double_buff_init(&huart5, (uint32_t *)(usart5_rx_buff[0]),
-				(uint32_t *)(usart5_rx_buff[1]), USART5_RX_BUFF_LEN);
-
-	dma_rx_double_buff_init(&huart7, (uint32_t *)(usart7_rx_buff[0]),
-				(uint32_t *)(usart7_rx_buff[1]), USART7_RX_BUFF_LEN);
+	dma_rx_double_buff_init(&huart5, &uart5_config);
+	dma_rx_double_buff_init(&huart7, &uart7_config);
 }
 
-// rewrite HAL UART RX Event callback function
+/* rewrite HAL UART RX Event callback function */ 
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
 	if (huart == &huart5) {
-		uart5_rx_handler(huart, Size);
+		uart_rx_handler_double_dma(huart, Size, &uart5_config);
 	} else if (huart == &huart7) {
-		uart7_rx_handler(huart, Size);
+		uart_rx_handler_double_dma(huart, Size, &uart7_config);
 	}
 }

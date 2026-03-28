@@ -8,7 +8,6 @@
 
 int crc_debug = 0;
 int freq_count = 0;
-struct vt03_raw_data vt03_raw_data;
 struct vt03_data vt03_data;
 static uint16_t crc16_init = 0xffff;
 static const uint16_t crc16_tab[256] = {
@@ -79,34 +78,42 @@ static int verify_crc16_check_sum(uint8_t *p_msg, uint16_t len)
 		((w_expected >> 8) & 0xff) == p_msg[len - 1]);
 }
 
-void usart7_data_interpret(uint8_t *rx_buff)
+static void vt03_data_interpret(uint8_t *rx_buff, struct vt03_data *vt03_data)
 {
-	/* feed the dog and enable control */
-	HAL_IWDG_Refresh(&hiwdg1);
-	control_ready = 1;
-	freq_count++;
-
-	if (verify_crc16_check_sum(rx_buff, USART7_RX_FRAME_LEN)) {
-		memcpy(&vt03_raw_data, rx_buff, USART7_RX_FRAME_LEN);
+	struct vt03_raw_data vt03_raw_data;
+	if (verify_crc16_check_sum(rx_buff, VT03_FRAME_LENGTH)) {
+		memcpy(&vt03_raw_data, rx_buff, VT03_FRAME_LENGTH);
 	} else {
-		crc_debug++;
+		crc_debug++; /* local variable */
 	}
 
 	/* ch_0 ~ ch_4: mapping 364 ~ 1684 to -1 ~ 1 */
-	vt03_data.ls_x = (vt03_raw_data.rc.bit.ch_2 - 1024) / 660.0f;
-	vt03_data.ls_y = -(vt03_raw_data.rc.bit.ch_3 - 1024) / 660.0f;
-	vt03_data.rs_x = (vt03_raw_data.rc.bit.ch_1 - 1024) / 660.0f;
-	vt03_data.rs_y = -(vt03_raw_data.rc.bit.ch_0 - 1024) / 660.0f;
+	vt03_data->ls_x = (vt03_raw_data.rc.bit.ch_2 - 1024) / 660.0f;
+	vt03_data->ls_y = -(vt03_raw_data.rc.bit.ch_3 - 1024) / 660.0f;
+	vt03_data->rs_x = (vt03_raw_data.rc.bit.ch_1 - 1024) / 660.0f;
+	vt03_data->rs_y = -(vt03_raw_data.rc.bit.ch_0 - 1024) / 660.0f;
 
 	/* wheel: mapping 364 ~ 1684 to -1 ~ 1 */
-	vt03_data.wheel = (vt03_raw_data.rc.bit.wheel - 1024) / 660.0f;
+	vt03_data->wheel = (vt03_raw_data.rc.bit.wheel - 1024) / 660.0f;
 
 	/* mode c: 0, mode n: 1, mode s: 2 */
-	vt03_data.mode_sw = vt03_raw_data.rc.bit.mode_sw;
+	vt03_data->mode_sw = vt03_raw_data.rc.bit.mode_sw;
 
 	/* 0: unpressed, 1: pressed */
-	vt03_data.pause = vt03_raw_data.rc.bit.pause;
-	vt03_data.l_fn = vt03_raw_data.rc.bit.fn_1;
-	vt03_data.r_fn = vt03_raw_data.rc.bit.fn_2;
-	vt03_data.trigger = vt03_raw_data.rc.bit.trigger;
+	vt03_data->pause = vt03_raw_data.rc.bit.pause;
+	vt03_data->l_fn = vt03_raw_data.rc.bit.fn_1;
+	vt03_data->r_fn = vt03_raw_data.rc.bit.fn_2;
+	vt03_data->trigger = vt03_raw_data.rc.bit.trigger;
+}
+
+void uart7_data_interpret(uint8_t *rx_buff, uint16_t received_len)
+{
+		/* feed the dog and enable control */
+		HAL_IWDG_Refresh(&hiwdg1);
+		control_ready = 1;
+		freq_count++;
+
+		if (received_len != VT03_FRAME_LENGTH)
+				return;
+		vt03_data_interpret(rx_buff, &vt03_data);
 }

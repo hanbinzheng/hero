@@ -9,7 +9,6 @@
 #define DBUS_OFFLINE_TICK 200 /* ms */
 
 #define DBUS_FRAME_LENGTH 18 /* 18 byte a data frame */
-#define DBUS_RX_BUF_NUM 36   /* double buffer dma */
 
 struct dbus_data {
 	/* Normalize channel value: -660 ~ 660 -> -1 ~ 1 */

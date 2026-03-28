@@ -26,10 +26,6 @@ struct dbus_data dbus_data;
 
 static void dbus_data_interpret(uint8_t *buff, struct dbus_data *dbus_data)
 {
-	// feed the dog
-	HAL_IWDG_Refresh(&hiwdg1);
-	control_ready = 1;
-
 	dbus_data->rs_y =
 	    (((buff[0] | (buff[1] << 8)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;
 	dbus_data->rs_x =
@@ -58,7 +54,13 @@ static void dbus_data_interpret(uint8_t *buff, struct dbus_data *dbus_data)
 }
 
 /* rewrite weak function in bsp_usart.c */
-void usart5_data_interpret(uint8_t *rx_buff)
+void uart5_data_interpret(uint8_t *rx_buff, uint16_t received_len)
 {
-	dbus_data_interpret(rx_buff, &dbus_data);
+		/* feed the dog */
+		HAL_IWDG_Refresh(&hiwdg1);
+		control_ready = 1;
+
+		if (received_len != DBUS_FRAME_LENGTH)
+				return;
+		dbus_data_interpret(rx_buff, &dbus_data);
 }

@@ -3,10 +3,11 @@
 
 #include "usart.h"
 
-#define USART5_RX_FRAME_LEN 18
-#define USART5_RX_BUFF_LEN 36 /* 18 x 2 */
-#define USART7_RX_FRAME_LEN 21
-#define USART7_RX_BUFF_LEN 42
+// #define USART5_RX_FRAME_LEN 18
+#define UART5_RX_BUFF_LEN 256
+// #define USART7_RX_FRAME_LEN 21
+#define UART7_RX_BUFF_LEN 256
+#define UART10_RX_BUFF_LEN 256
 
 void usart_init(void);
 

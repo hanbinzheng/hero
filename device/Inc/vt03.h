@@ -8,6 +8,7 @@
 #define MODE_C 0
 #define MODE_N 1
 #define MODE_S 2
+#define VT03_FRAME_LENGTH 21
 
 #pragma pack(push, 1)
 struct vt03_raw_data {
