@@ -9,7 +9,6 @@
 #define PITCH_DEPRESSION (-1.2981f)
 #define PITCH_ELEVATION (-0.3179f)
 #define PITCH_TOTAL_SCALE (0.98023f) /* evaluation - depression */
-#define PITCH_SENSITIVITY (0.005f)
 #define PITCH_BALANCE (-0.50f)
 #define PITCH_SENSITIVITY (0.003f)
 #define YAW_SENSITIVITY (0.0075f)
