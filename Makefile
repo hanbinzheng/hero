@@ -56,6 +56,7 @@ device/Src/dbus.c \
 device/Src/vt03.c \
 device/Src/motor.c \
 device/Src/imu.c \
+device/Src/referee.c \
 device/Src/mi_motor.c \
 device/Src/dm_motor.c \
 device/Src/dji_motor.c \
