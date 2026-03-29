@@ -14,7 +14,7 @@
 #define V_UPDATE_MIN (0.05f)
 #define ABS(x) ((x > 0) ? (x) : (-x))
 #define R_CHASSIS (0.2518714354586482f)
-#define OMEGA (1.0f)
+#define OMEGA (2 * PI)
 
 static int const wheel_direction[4] = {1, -1, -1, 1};
 static uint64_t chassis_debug = 0;
@@ -84,7 +84,7 @@ void chassis_task()
 		dji3508_set_chassis_vel(safe_vel);
 		return;
 	} else if (vt03_data.mode_sw == MODE_C) {
-		// v_rotate = R_CHASSIS * OMEGA;
+		v_rotate = R_CHASSIS * OMEGA;
 		yaw_diff = dm6006_get_pos();
 	} else {
 		v_rotate = 0;
