@@ -11,8 +11,7 @@
 #define GYRO_SENSITIVITY_1000 32.768f
 #define ACCEL_SENSITIVITY_3 10922.66667f
 
-#define _PI_OVER_180 (3.14159265358979f / 180.0f)
-#define _180_OVER_PI (180.0f / 3.14159265358979f)
+#define TWO_PI_OVER_180 (2 * 3.14159265358979f / 180.0f)
 
 #define BMI088_TEMP_FACTOR 0.125f
 #define BMI088_TEMP_OFFSET 23.0f
@@ -228,13 +227,13 @@ void imu_get_data(struct imu_raw_data *data)
 	bmi088_gyro_read_multi_reg(BMI088_GYRO_X_L, gyro_buff);
 	tmp = (int16_t)((gyro_buff[1] << 8) | gyro_buff[0]);
 	data->gyro[0] =
-	    ((float)tmp / GYRO_SENSITIVITY_1000) * _PI_OVER_180 - gyro_bias[0];
+	    ((float)tmp / GYRO_SENSITIVITY_1000) * TWO_PI_OVER_180 - gyro_bias[0];
 	tmp = (int16_t)((gyro_buff[3] << 8) | gyro_buff[2]);
 	data->gyro[1] =
-	    ((float)tmp / GYRO_SENSITIVITY_1000) * _PI_OVER_180 - gyro_bias[1];
+	    ((float)tmp / GYRO_SENSITIVITY_1000) * TWO_PI_OVER_180 - gyro_bias[1];
 	tmp = (int16_t)((gyro_buff[5] << 8) | gyro_buff[4]);
 	data->gyro[2] =
-	    ((float)tmp / GYRO_SENSITIVITY_1000) * _PI_OVER_180 - gyro_bias[2];
+	    ((float)tmp / GYRO_SENSITIVITY_1000) * TWO_PI_OVER_180 - gyro_bias[2];
 
 	/* read accel data, the unit is g */
 	bmi088_accel_read_multi_reg(BMI088_ACCEL_XOUT_L, accel_buff);
