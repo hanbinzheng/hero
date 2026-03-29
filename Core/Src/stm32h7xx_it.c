@@ -369,6 +369,9 @@ void TIM15_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM15_IRQn 0 */
   tim15_count++;
+  if (system_ready && control_ready) {
+	  armor_task();
+  }
   /* USER CODE END TIM15_IRQn 0 */
   HAL_TIM_IRQHandler(&htim15);
   /* USER CODE BEGIN TIM15_IRQn 1 */
