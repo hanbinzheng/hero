@@ -13,7 +13,7 @@
 #define V_THRESHOLD (2.0f)
 #define V_UPDATE_MIN (0.05f)
 #define ABS(x) ((x > 0) ? (x) : (-x))
-#define R_CHASSIS (0.2518714354586482f)
+#define R_CHASSIS (0.2475f)
 #define OMEGA (2 * PI)
 
 static int const wheel_direction[4] = {1, -1, -1, 1};
