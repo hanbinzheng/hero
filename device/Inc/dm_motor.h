@@ -46,9 +46,9 @@ void dm_motor_interpret(uint8_t *rx_buff, uint8_t is_1t4, struct dm_motor *motor
 HAL_StatusTypeDef dm4310_enable(void);
 HAL_StatusTypeDef dm4310_disable(void);
 HAL_StatusTypeDef dm4310_send_command(float pos, float vel);
-HAL_StatusTypeDef dm6006_set_vel(float vel);
-float dm6006_get_pos(int pos);
-float dm6006_set_pos(float pos);
+float dm6006_get_pos(void);
+HAL_StatusTypeDef dm6006_set_vel(float ref_vel, float meas_vel);
+HAL_StatusTypeDef dm6006_set_pos(float ref_pos, float meas_pos, float meas_vel);
 
 extern struct dm_motor dm4310;
 extern struct dm_motor dm6006;

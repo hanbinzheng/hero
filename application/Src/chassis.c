@@ -8,9 +8,9 @@
 #include <math.h>
 
 #define RADIUS (0.059f)
-#define SENSITIVITY (2.0f)
+#define SENSITIVITY (1.5f)
 // #define V_ROTATE (3.0f)
-#define V_THRESHOLD (3.0f)
+#define V_THRESHOLD (2.0f)
 #define V_UPDATE_MIN (0.05f)
 #define ABS(x) ((x > 0) ? (x) : (-x))
 #define R_CHASSIS (0.2518714354586482f)
@@ -85,7 +85,7 @@ void chassis_task()
 		return;
 	} else if (vt03_data.mode_sw == MODE_C) {
 		// v_rotate = R_CHASSIS * OMEGA;
-		yaw_diff = dm6006_get_pos(dm6006.raw_pos);
+		yaw_diff = dm6006_get_pos();
 	} else {
 		v_rotate = 0;
 		yaw_diff = 0;

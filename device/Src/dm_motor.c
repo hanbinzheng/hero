@@ -6,8 +6,9 @@
 struct dm_motor dm4310; /* master id: 0x0B, can id: 0x01 */
 struct dm_motor dm6006;
 
-#define DM6006_ZERO (4242)
+#define DM6006_ZERO (4200) /* 4200 or 5600 */
 #define DM6006_DIFF_MAX (0.50f)
+#define DM6006_VEL_SCALE (0x1800)
 
 /*
 static inline uint16_t float_to_uint(float x, float x_min, float x_max, uint8_t bits)
@@ -112,12 +113,12 @@ static int16_t dm6006_float_to_int(float value, uint16_t scale)
 	return (int16_t)value;
 }
 
-HAL_StatusTypeDef dm6006_set_vel(float vel) /*  can id: 0x3FE */
+HAL_StatusTypeDef dm6006_set_vel(float ref_vel, float meas_vel) /* can id: 0x3FE */
 {
 	/* cur: -1.0 ~ 1.0 */
-	static uint8_t low, high;
-	float cur = pid_calculate(&pid_6006_v2c, vel, -dm6006.vel);
-	int16_t cur_int = dm6006_float_to_int(cur, 0x1800);
+	static uint8_t low, high; /* for debug */
+	float cur = pid_calculate(&pid_6006_v2c, ref_vel, meas_vel);
+	int16_t cur_int = dm6006_float_to_int(cur, DM6006_VEL_SCALE);
 	uint8_t tx_buff[8] = {0};
 	low = (uint8_t)(cur_int & 0x00FF); /* low 8 bits */
 	high = (uint8_t)(cur_int >> 8);	   /* high 8 bits */
@@ -126,8 +127,9 @@ HAL_StatusTypeDef dm6006_set_vel(float vel) /*  can id: 0x3FE */
 	return can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, tx_buff);
 }
 
-float dm6006_get_pos(int pos)
+float dm6006_get_pos(void)
 {
+	int pos = dm6006.raw_pos;
 	pos = DM6006_ZERO - pos;
 	while (pos >= 4096) {
 		pos -= 8192;
@@ -138,24 +140,20 @@ float dm6006_get_pos(int pos)
 	return pos / 4096.0f * 3.14159265358979f;
 }
 
-static float update_pos_ref(float ref, float measure)
+static float update_pos_ref(float ref, float meas)
 {
-	while (ref - measure >= PI) {
+	while (ref - meas >= PI) {
 		ref -= 2 * PI;
 	}
-
-	while (ref - measure <= -PI) {
+	while (ref - meas <= -PI) {
 		ref += 2 * PI;
 	}
-
 	return ref;
 }
 
-float dm6006_set_pos(float pos) /*  can id: 0x3FE */
+HAL_StatusTypeDef dm6006_set_pos(float ref_pos, float meas_pos, float meas_vel)
 {
-	static volatile float pos_measure = 0;
-	pos_measure = dm6006_get_pos(dm6006.raw_pos);
-	pos = update_pos_ref(pos, pos_measure);
+	ref_pos = update_pos_ref(ref_pos, meas_pos);
 
 	// if (pos - pos_measure >= DM6006_DIFF_MAX) {
 	// 	pos = pos_measure + DM6006_DIFF_MAX;
@@ -163,6 +161,6 @@ float dm6006_set_pos(float pos) /*  can id: 0x3FE */
 	// 	pos = pos_measure - DM6006_DIFF_MAX;
 	// }
 
-	float vel = pid_calculate(&pid_6006_p2v, pos, pos_measure);
-	return dm6006_set_vel(vel);
+	float ref_vel = pid_calculate(&pid_6006_p2v, ref_pos, meas_pos);
+	return dm6006_set_vel(ref_vel, meas_vel);
 }
