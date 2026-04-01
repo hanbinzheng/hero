@@ -3,6 +3,7 @@
 
 /* revised from Yaofang Ji https://github.com/Froze23n/ */
 #include <stdint.h>
+#include "usart.h"
 
 /* enum and struct definition */
 
@@ -138,6 +139,48 @@ struct rfid_status {
         uint32_t rfid_status;
         uint8_t rfid_status_2;
 }; /* 0x0209 */
+
+struct interaction_figure {
+        uint8_t figure_name[3]; /* byte 0 - 2 */
+
+        /* byte 3 - 6: figure configuration 1, a uint32_t  */
+
+        /* bit 0 - 2: operation of figure
+         * 0: None, 1: add, 2: modify, 3: delete
+         */
+        uint32_t operate_type : 3;
+
+        /* bit 3 - 5: type of figure
+         * 0: line, 1: rectangle, 2: circle, 3: ellipse
+         * 4: cyclometer, 5: float number, 6: integer, 7: characters
+         */
+        uint32_t figure_type : 3;
+
+        /* bit 6 - 9: number of layers, 0 - 9 */
+        uint32_t layer : 4;
+
+        /* bit 10 - 13: color
+         * 0: red/blue (color of our side), 1: yellow, 2: green, 
+         * 3: orange, 4: purple, 5: pink, 6: cyan, 7: black, 8: white
+         */
+        uint32_t color : 4;
+
+        /* bit 14 - 31: figure details, different according to figure type */
+        uint32_t details_a : 9;
+        uint32_t details_b : 9;
+
+        /* byte 7 - 10: figure configuration 2, a uint32_t */
+        uint32_t width : 10;
+        uint32_t start_x : 11;
+        uint32_t start_y : 11;
+
+        /* byte 11 - 14: figure configuration 3, a uint32_t
+         *different according to figure type
+         */
+        uint32_t details_c : 10;
+        uint32_t details_d : 11;
+        uint32_t details_e : 11;
+};
 #pragma pack(pop)
 
 struct referee_info {
@@ -161,5 +204,7 @@ struct referee_info {
 
 /* global variable and functino declaration */
 extern struct referee_info referee_info;
+
+HAL_StatusTypeDef referee_ui_update(void);
 
 #endif /* REFEREE_H_ */
