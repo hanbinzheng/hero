@@ -47,6 +47,7 @@ static struct can_filter_config fdcan1_config[] = {
     {.rx_id = 0x208, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
     {.rx_id = 0x301, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
     {.rx_id = 0x00B, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+	{.rx_id = 0x486, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
 };
 
 static struct can_filter_config fdcan2_config[] = {
@@ -225,9 +226,9 @@ HAL_StatusTypeDef can_init(void)
 	 */
 
 	/* Configure filters */
-	can_config_filter(fdcan1_config, 10);
-	can_config_filter(fdcan2_config, 6);
-	can_config_filter(fdcan3_config, 1);
+	can_config_filter(fdcan1_config, sizeof(fdcan1_config) / sizeof(struct can_filter_config));
+	can_config_filter(fdcan2_config, sizeof(fdcan2_config) / sizeof(struct can_filter_config));
+	can_config_filter(fdcan3_config, sizeof(fdcan3_config) / sizeof(struct can_filter_config));
 
 	uint8_t result = HAL_OK;
 	FDCAN_HandleTypeDef *hfdcan;
