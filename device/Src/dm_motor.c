@@ -6,7 +6,7 @@
 struct dm_motor dm4310; /* master id: 0x0B, can id: 0x01 */
 struct dm_motor dm6006;
 
-#define DM6006_ZERO (4200) /* 4200 or 5600 */
+#define DM6006_ZERO (6394) /* 4200 or 5600 */
 #define DM6006_DIFF_MAX (0.50f)
 #define DM6006_VEL_SCALE (0x1800)
 
@@ -130,7 +130,7 @@ HAL_StatusTypeDef dm6006_set_vel(float ref_vel, float meas_vel) /* can id: 0x3FE
 float dm6006_get_pos(void)
 {
 	int pos = dm6006.raw_pos;
-	pos = DM6006_ZERO - pos;
+	pos = pos - DM6006_ZERO;
 	while (pos >= 4096) {
 		pos -= 8192;
 	}
