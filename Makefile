@@ -54,7 +54,8 @@ bsp/Src/bsp_spi.c \
 bsp/Src/bsp_tim.c \
 device/Src/dbus.c \
 device/Src/vt03.c \
-device/Src/motor.c \
+device/Src/can_device.c \
+device/Src/super_cap.c \
 device/Src/imu.c \
 device/Src/referee.c \
 device/Src/mi_motor.c \
