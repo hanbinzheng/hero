@@ -56,7 +56,7 @@ void gimbal_task(void)
 	gimbal_count = (gimbal_count + 1) % 1000;
 
 	/* safe mode */
-	if (vt03_data.mode_sw == MODE_S) {
+	if (vt03_data.mode_sw == MODE_C) {
 		mi_send_command(0.0f, 0.0f, 0.0f, 0.0f, 0.0f); /* velocity = 0: keep stable */
 		can_transmit(&hfdcan1, 0x3FE, CAN_ID_STD, dm6006_stop);
 

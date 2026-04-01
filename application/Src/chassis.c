@@ -77,13 +77,13 @@ void chassis_task()
 	static float vx_cmd = 0, vy_cmd = 0, v_rotate = 0, yaw_diff = 0;
 	static float pos_raw[4], pos_cmd[4], vel_raw[4], vel_cmd[4];
 
-	if (vt03_data.mode_sw == MODE_S) {
+	if (vt03_data.mode_sw == MODE_C) {
 		static float safe_vel[4] = {0, 0, 0, 0};
 		static float safe_pos[4] = {-PI / 4, PI / 4, -PI / 4, PI / 4};
 		dji6020_set_pos(safe_pos);
 		dji3508_set_chassis_vel(safe_vel);
 		return;
-	} else if (vt03_data.mode_sw == MODE_C) {
+	} else if (vt03_data.mode_sw == MODE_S) {
 		v_rotate = -R_CHASSIS * OMEGA;
 		yaw_diff = dm6006_get_pos();
 	} else {

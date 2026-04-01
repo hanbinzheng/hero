@@ -33,12 +33,12 @@ static inline void update_vel(float vel[6], float vel_scale,
 }
 
 static inline void reset_vel_base(void) {
-	vel_friction_base[0] = -100.0f;
-	vel_friction_base[1] = 100.0f;
-	vel_friction_base[2] = 100.0f;
-	vel_friction_base[3] = -100.0f;
-	vel_friction_base[4] = 100.0f;
-	vel_friction_base[5] = 100.0f;
+	vel_friction_base[0] = -50.0f;
+	vel_friction_base[1] = 50.0f;
+	vel_friction_base[2] = 50.0f;
+	vel_friction_base[3] = -50.0f;
+	vel_friction_base[4] = 50.0f;
+	vel_friction_base[5] = 50.0f;
 }
 
 static inline float get_friction_cur(void) {
@@ -64,7 +64,7 @@ void armor_task(void)
 	// }
 
 	/* safe mode */
-	if (vt03_data.mode_sw == MODE_S) {
+	if (vt03_data.mode_sw == MODE_C) {
 		dm4310_send_command(0.0f, 0.0f); /* vel = 0, remain still */
 		dji3508_set_armor_vel(vel_stop);
 		return;
