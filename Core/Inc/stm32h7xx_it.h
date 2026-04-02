@@ -65,6 +65,7 @@ void TIM4_IRQHandler(void);
 void TIM8_BRK_TIM12_IRQHandler(void);
 void TIM5_IRQHandler(void);
 void UART5_IRQHandler(void);
+void OTG_HS_IRQHandler(void);
 void UART7_IRQHandler(void);
 void TIM15_IRQHandler(void);
 void USART10_IRQHandler(void);
