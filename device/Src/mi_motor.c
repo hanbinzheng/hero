@@ -38,12 +38,7 @@ void mi_motor_enable(void)
 	uint8_t tx_data[8] = {0}; /* dummy data */
 	uint32_t identifier =
 	    (3 << 24) | (mi_motor.master_id << 8) | mi_motor.motor_id;
-	do {
-		mi_enabled = can_transmit(&hfdcan3, identifier, CAN_ID_EXT, tx_data);
-		if (HAL_OK != mi_enabled)
-			Error_Handler();
-		dwt_delay_ms(1);
-	} while (mi_motor.status != MI_ENABLED);
+	mi_enabled = can_transmit(&hfdcan3, identifier, CAN_ID_EXT, tx_data);
 }
 
 void mi_motor_disable(void)
