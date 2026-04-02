@@ -62,6 +62,7 @@
   */
 
 /* USER CODE BEGIN PRIVATE_DEFINES */
+__weak void cdc_receive_handler(uint8_t *buff, uint32_t *len);
 /* USER CODE END PRIVATE_DEFINES */
 
 /**
@@ -246,7 +247,6 @@ static int8_t CDC_Control_HS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   /* USER CODE END 10 */
 }
 
-__weak void cdc_receive_handler(uint8_t *buff, uint32_t *len);
 /**
   * @brief Data received over USB OUT endpoint are sent over CDC interface
   *         through this function.
