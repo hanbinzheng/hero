@@ -94,7 +94,7 @@ void armor_task(void)
 		dji3508_set_armor_vel(vel_friction_base);
 		/* slowly update velocity */
 		if (armor_count % 10 == 0 ) {
-			update_vel(vel_friction_base, 20.0f, 300.0f, 460.0f);
+			update_vel(vel_friction_base, 20.0f, 440.0f, 420.0f);
 		}
 		curr_total = get_friction_cur();
 	} else {
