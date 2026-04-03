@@ -66,6 +66,7 @@ algorithm/Src/pid.c \
 algorithm/Src/kinematics.c \
 algorithm/Src/quaternion.c \
 algorithm/Src/mahony.c \
+application/Src/chore.c \
 application/Src/chassis.c \
 application/Src/gimbal.c \
 application/Src/armor.c \

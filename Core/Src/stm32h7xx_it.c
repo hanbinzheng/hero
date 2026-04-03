@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
 #include "armor.h"
+#include "chore.h"
 #include "chassis.h"
 #include "gimbal.h"
 /* USER CODE END Includes */
@@ -311,6 +312,7 @@ void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
   tim2_count++;
+  chore_task();
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
