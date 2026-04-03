@@ -7,7 +7,7 @@ struct super_cap_data super_cap_data;
 int volatile super_cap_debug = 0;
 
 /* cannot be placed directly into super_cap_interpret */
-static void update_super_cap_cmd(void)
+void update_super_cap_cmd(void)
 {
     static uint8_t tx_buff[3];
 

@@ -27,6 +27,7 @@ enum super_cap_state {
 };
 
 void super_cap_interpret(uint8_t *rx_buff, struct super_cap_data *super_cap_data);
+void update_super_cap_cmd(void);
 
 extern struct super_cap_data super_cap_data;
 #endif
