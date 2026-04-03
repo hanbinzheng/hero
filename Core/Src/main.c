@@ -40,7 +40,7 @@
 #include "imu.h"
 #include "mi_motor.h"
 
-#include "armor.h"
+#include "ammo.h"
 #include "chassis.h"
 #include "gimbal.h"
 /* USER CODE END Includes */
@@ -147,7 +147,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-    system_ready = 1;
+  /* pwm and system ready here */
+  HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_2);
+  __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 2000);
+  dwt_delay_ms(50);
+  __HAL_TIM_SET_COMPARE(&htim12, TIM_CHANNEL_2, 0);
+  system_ready = 1;
 	while (1) {
 		dwt_delay_ms(1);
 		count++;
