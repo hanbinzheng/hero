@@ -243,7 +243,7 @@ HAL_StatusTypeDef referee_ui_update(void){
         tx_buff[9] = (uint8_t)(sender_id & 0xFF);
         tx_buff[10] = (uint8_t)(sender_id >> 8);
         /* receiver id: the client */
-        uint16_t receiver_id = (sender_id < 0x0100) ? (sender_id + 0x0100) : (sender_id + 0x0064);
+        uint16_t receiver_id = (sender_id < 100) ? 1 : 101; /* red hero: 1, bulue hero: 101 */
         tx_buff[11] = (uint8_t)(receiver_id & 0xFF);
         tx_buff[12] = (uint8_t)(receiver_id >> 8);
 
