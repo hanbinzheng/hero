@@ -63,6 +63,7 @@ device/Src/mi_motor.c \
 device/Src/dm_motor.c \
 device/Src/dji_motor.c \
 algorithm/Src/pid.c \
+algorithm/Src/crc.c \
 algorithm/Src/kinematics.c \
 algorithm/Src/quaternion.c \
 algorithm/Src/mahony.c \

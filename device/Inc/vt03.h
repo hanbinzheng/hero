@@ -88,6 +88,7 @@ struct vt03_raw_data {
 #pragma pack(pop)
 
 struct vt03_data {
+	/* handler manipulation */
 	float ls_x;
 	float ls_y;
 	float rs_x;
@@ -98,6 +99,37 @@ struct vt03_data {
 	uint8_t l_fn;
 	uint8_t r_fn;
 	uint8_t trigger;
+
+	/* keyboard and mouse manipulation */
+	float mouse_x; /* right(+) and left(-) */
+	float mouse_y; /* forward(+) and backward(-) */
+	float mouse_z; /* forward(+) and backward(-) */
+
+	uint8_t mouse_left; /* 1: pressed, 0: unpressed */
+	uint8_t mouse_right; /* 1: pressed, 0: unpressed */
+	uint8_t mouse_middle; /* 1: pressed, 0: unpressed */
+
+	union {
+		uint16_t raw;
+		struct {
+			uint16_t w : 1;
+			uint16_t s : 1;
+			uint16_t a : 1;
+			uint16_t d : 1;
+			uint16_t shift : 1;
+			uint16_t ctrl : 1;
+			uint16_t q : 1;
+			uint16_t e : 1;
+			uint16_t r : 1;
+			uint16_t f : 1;
+			uint16_t g : 1;
+			uint16_t z : 1;
+			uint16_t x : 1;
+			uint16_t c : 1;
+			uint16_t v : 1;
+			uint16_t b : 1;
+		} bit;
+	} keyboard;
 };
 
 extern struct vt03_raw_data vt03_raw_data;
