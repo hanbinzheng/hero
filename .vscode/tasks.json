@@ -1,0 +1,48 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake Build",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build/Debug"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Start OpenOCD",
+            "type": "process",
+            "isBackground": true,
+            "dependsOn": "CMake Build",
+            "command": "openocd",
+            "args": [
+                "-f",
+                "cmsis-dap-h7.cfg",
+                "-c",
+                "program build/Debug/hero.elf; reset; halt;"
+            ],
+            "problemMatcher": {
+                "pattern": {
+                    "regexp": "^(.*)$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "xPack Open On-Chip Debugger",
+                    "endsPattern": "Listening on port 14566 for gdb connections"
+                }
+            }
+        }
+    ]
+}

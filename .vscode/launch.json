@@ -1,0 +1,35 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "GDB Manual Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "preLaunchTask": "Start OpenOCD",
+            "program": "${workspaceFolder}/build/Debug/hero.elf",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "miDebuggerPath": "arm-none-eabi-gdb",
+            // "miDebuggerServerAddress": "localhost:14566",
+            "setupCommands": [
+                {
+                    "description": "Conn",
+                    "text": "target extended-remote localhost:14566",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Reset and Halt",
+                    "text": "monitor reset halt",
+                    "ignoreFailures": false
+                }
+            ],
+            "logging": {
+                "engineLogging": true
+            }
+        }
+    ]
+}

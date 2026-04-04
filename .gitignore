@@ -9,4 +9,5 @@ build/
 # ozone debug configurations
 *.jdebug
 *.jdebug.user
+!cmsis-dap-h7.dap
 
