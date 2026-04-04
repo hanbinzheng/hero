@@ -13,6 +13,8 @@
 #define PITCH_SENSITIVITY (0.003f)
 #define YAW_SENSITIVITY (0.0075f)
 
+#define MOUSE_WHEEL_SENEITYVITY (2.0f)
+
 static uint64_t gimbal_debug = 0;
 static uint8_t dm6006_stop[8] = {0};
 
@@ -44,6 +46,7 @@ void gimbal_task(void)
 	static float pos_yaw = 0.0f;
 	static float trq_pitch = 0.0f;
 
+	/* safety setting for first power on */
 	if (gimbal_debug == 0) {
 		pos_yaw = imu_data.pos_yaw;
 		pos_pitch = mi_motor.pos;
@@ -53,7 +56,6 @@ void gimbal_task(void)
 
 	/* 1000hz control frequency, the state machine */
 	static uint16_t gimbal_count = 0;
-	gimbal_count = (gimbal_count + 1) % 1000;
 
 	/* safe mode */
 	if (vt03_data.mode_sw == MODE_C) {
@@ -70,7 +72,7 @@ void gimbal_task(void)
 	}
 
 	/* yaw control */
-	pos_yaw += vt03_data.rs_y * YAW_SENSITIVITY;
+	pos_yaw += (vt03_data.rs_y - vt03_data.mouse_x) * YAW_SENSITIVITY;
 	correct_yaw_pos_ref(&pos_yaw);
 	dm6006_set_pos(pos_yaw, imu_data.pos_yaw, imu_data.vel_yaw);
 
@@ -79,8 +81,10 @@ void gimbal_task(void)
 		mi_motor_enable();
 	} else {
 		/* pitch control */
-		pos_pitch += -vt03_data.rs_x * PITCH_SENSITIVITY;
+		pos_pitch += (-vt03_data.rs_x + vt03_data.mouse_z * MOUSE_WHEEL_SENEITYVITY) * PITCH_SENSITIVITY;
 		limit(&pos_pitch, PITCH_DEPRESSION, PITCH_ELEVATION);
 		mi_set_pos(pos_pitch);
 	}
+
+	gimbal_count = (gimbal_count + 1) % 1000;
 }
