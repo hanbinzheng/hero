@@ -4,9 +4,9 @@
 /* reference: https://zhuanlan.zhihu.com/p/720966722 */
 
 /* receiption buffers */
-__attribute__((section(".dma12_buffer"))) uint8_t uart5_rx_buff[2][UART5_RX_BUFF_LEN];
-__attribute__((section(".dma12_buffer"))) uint8_t uart7_rx_buff[2][UART7_RX_BUFF_LEN];
-__attribute__((section(".dma12_buffer"))) uint8_t uart10_rx_buff[2][UART10_RX_BUFF_LEN];
+__attribute__((section(".D1_SECTION"))) uint8_t uart5_rx_buff[2][UART5_RX_BUFF_LEN]; //dbus
+__attribute__((section(".D1_SECTION"))) uint8_t uart7_rx_buff[2][UART7_RX_BUFF_LEN]; //vt03
+__attribute__((section(".D1_SECTION"))) uint8_t uart10_rx_buff[2][UART10_RX_BUFF_LEN]; // referee
 
 /* weak functions for data interpretation */
 __weak void uart5_data_interpret(uint8_t *rx_buff, uint16_t received_len);

@@ -197,7 +197,7 @@ static void referee_data_interpret(uint8_t *rx_buff, uint16_t total_len,
         }
 }
 
-__attribute__((section(".dma12_buffer"))) static uint8_t tx_buff[128] = {0};
+__attribute__((section(".D1_SECTION"))) static uint8_t tx_buff[128] = {0};
 static uint32_t cap = 0;
 uint32_t aim_x = 960;
 uint32_t aim_y = 540;

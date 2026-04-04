@@ -136,7 +136,7 @@ int main(void)
   MX_TIM15_Init();
   MX_FDCAN2_Init();
   MX_UART7_Init();
-  MX_IWDG1_Init();
+  // MX_IWDG1_Init();
   MX_USART10_UART_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
@@ -144,7 +144,7 @@ int main(void)
 	can_init();
 	tim_init();
 	imu_init();
-	dwt_init(480);
+	dwt_init(550);
 	mi_motor_enable();
 	dm4310_enable();
   /* USER CODE END 2 */

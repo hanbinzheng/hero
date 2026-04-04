@@ -225,6 +225,18 @@ SECTIONS
     __bss_end__ = _ebss;
       PROVIDE( __bss_end = .);
   } >DTCMRAM
+  .D1_SECTION :
+  {
+    . = ALIGN(4);
+    *(.BUFFER)
+    . = ALIGN(4);
+  } >RAM_D1
+  .D2_SECTION :
+  {
+    . = ALIGN(4);
+    *(.BUFFER)
+    . = ALIGN(4);
+  } >RAM_D2
   PROVIDE( __non_tls_bss_start = ADDR(.bss) );
 
   PROVIDE( __bss_start = __tbss_start );
