@@ -23,7 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
-#include "armor.h"
+#include "ammo.h"
 #include "chore.h"
 #include "chassis.h"
 #include "gimbal.h"
@@ -418,7 +418,7 @@ void TIM15_IRQHandler(void)
   /* USER CODE BEGIN TIM15_IRQn 0 */
   tim15_count++;
   if (system_ready && control_ready) {
-	  armor_task();
+	  ammo_task();
   }
   /* USER CODE END TIM15_IRQn 0 */
   HAL_TIM_IRQHandler(&htim15);
