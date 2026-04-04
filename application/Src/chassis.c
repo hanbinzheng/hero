@@ -7,28 +7,22 @@
 #include "kinematics.h"
 #include <math.h>
 
-#define RADIUS (0.059f)
-#define SENSITIVITY (1.5f)
-// #define V_ROTATE (3.0f)
-#define V_THRESHOLD (5.0f)
+#define WHEEL_RADIUS (0.059f)
+
 #define V_UPDATE_MIN (0.05f)
 #define ABS(x) ((x > 0) ? (x) : (-x))
+
+/* parameters for spinning mode */
 #define R_CHASSIS (0.2475f)
-#define OMEGA (2 * PI)
+#define OMEGA (3 * PI)
+
+#define CHASSIS_INCREMENT (0.016f) /* 125hz */
+#define CHASSIS_REDUCTION_SCALE (0.80f)
+
+#define CHASSIS_VEL_LEVEL (1.0f)
+#define CHASSIS_V_ROTATE_LEVEL (0.5f)
 
 static int const wheel_direction[4] = {1, -1, -1, 1};
-static uint64_t chassis_debug = 0;
-
-static void v_limit(float v[4])
-{
-	for (int i = 0; i < 4; i++) {
-		if (v[i] > V_THRESHOLD / RADIUS) {
-			v[i] = V_THRESHOLD / RADIUS;
-		} else if (v[i] < -V_THRESHOLD / RADIUS) {
-			v[i] = -V_THRESHOLD / RADIUS;
-		}
-	}
-}
 
 static float set_in_range(float pos)
 {
@@ -60,20 +54,55 @@ void get_cmd(float pos[4], float vel[4], float pos_cmd[4], float vel_cmd[4])
 		float diff = set_in_range(pos[i] - pos_measure[i]);
 		if (ABS(diff) <= PI / 2) {
 			pos_cmd[i] = pos[i];
-			vel_cmd[i] = vel[i] * wheel_direction[i] / RADIUS;
+			vel_cmd[i] = vel[i] * wheel_direction[i] / WHEEL_RADIUS;
 		} else {
 			pos_cmd[i] = set_in_range(pos[i] + PI);
-			vel_cmd[i] = -vel[i] * wheel_direction[i] / RADIUS;
+			vel_cmd[i] = -vel[i] * wheel_direction[i] / WHEEL_RADIUS;
 		}
 
+		/* adjust velocity to avoid skidding */
 		float error = pos_cmd[i] - pos_measure[i];
 		vel_cmd[i] = vel_cmd[i] * arm_cos_f32(error);
 	}
 }
 
+static inline float clamp(float x, float min, float max) {
+	if (x < min) {
+		return min;
+	} else if (x > max) {
+		return max;
+	} else {
+		return x;
+	}
+}
+
+static float slope_x(int x){
+	static float ret = 0;
+	switch(x){
+		case 1: ret += CHASSIS_INCREMENT; break;
+		case -1: ret -= CHASSIS_INCREMENT; break;
+      	case 0: ret *= CHASSIS_REDUCTION_SCALE; break;
+   	}
+	ret = clamp(ret, -1.0f, 1.0f);
+	return ret;
+}
+
+static float slope_y(int y){
+	static float ret = 0;
+	switch(y){
+		case 1: ret += CHASSIS_INCREMENT; break;
+		case -1: ret -= CHASSIS_INCREMENT; break;
+      	case 0: ret *= CHASSIS_REDUCTION_SCALE; break;
+   	}
+	ret = clamp(ret, -1.0f, 1.0f);
+	return ret;
+}
+
+uint64_t chassis_debug = 0;
 void chassis_task()
 {
 	chassis_debug++; /* only for debug usage */
+	static float x = 0, y = 0, z = 0; /* x, y and rotate */
 	static float vx_cmd = 0, vy_cmd = 0, v_rotate = 0, yaw_diff = 0;
 	static float pos_raw[4], pos_cmd[4], vel_raw[4], vel_cmd[4];
 
@@ -83,23 +112,33 @@ void chassis_task()
 		dji6020_set_pos(safe_pos);
 		dji3508_set_chassis_vel(safe_vel);
 		return;
-	} else if (vt03_data.mode_sw == MODE_S) {
-		v_rotate = -R_CHASSIS * OMEGA;
-		yaw_diff = dm6006_get_pos();
-	} else {
-		v_rotate = 0;
+	} else if (vt03_data.mode_sw == MODE_N) {
+		z = 0;
+		yaw_diff = 0; /* only for debug usage */
+	} else { /* MODE_S */
+		if (vt03_data.keyboard.bit.q || vt03_data.l_fn) {
+			z = (z + CHASSIS_INCREMENT >= 1.0f) ? 1.0f : z + CHASSIS_INCREMENT;
+		} else if (vt03_data.keyboard.bit.e || vt03_data.r_fn) {
+			z = (z - CHASSIS_INCREMENT <= -1.0f) ? -1.0f : z - CHASSIS_INCREMENT;
+		} else if (vt03_data.keyboard.bit.r || vt03_data.pause) {
+			z = z * CHASSIS_REDUCTION_SCALE;
+		}
 		yaw_diff = dm6006_get_pos();
 	}
 
+	/* get command of x direction and y direction */
+	x = vt03_data.ls_x + slope_x(vt03_data.keyboard.bit.w - vt03_data.keyboard.bit.s);
+	y = vt03_data.ls_y + slope_y(vt03_data.keyboard.bit.a - vt03_data.keyboard.bit.d);
+
 	/* get command data */
-	vx_cmd = vt03_data.ls_x * SENSITIVITY;
-	vy_cmd = vt03_data.ls_y * SENSITIVITY;
+	vx_cmd = x * CHASSIS_VEL_LEVEL;
+	vy_cmd = y * CHASSIS_VEL_LEVEL;
+	v_rotate = z * CHASSIS_V_ROTATE_LEVEL;
 
 	/* interpret data into motor command */
 	float v_cmd[3] = {vx_cmd, vy_cmd, v_rotate};
 	kinematics_swerve(v_cmd, yaw_diff, pos_raw, vel_raw);
 	get_cmd(pos_raw, vel_raw, pos_cmd, vel_cmd); /* shortest path */
-	v_limit(vel_cmd);
 
 	/* send command */
 	dji3508_set_chassis_vel(vel_cmd);
