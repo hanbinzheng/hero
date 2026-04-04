@@ -114,7 +114,7 @@ void chassis_task()
 		return;
 	} else if (vt03_data.mode_sw == MODE_N) {
 		z = 0;
-		yaw_diff = 0; /* only for debug usage */
+		yaw_diff = dm6006_get_pos();
 	} else { /* MODE_S */
 		if (vt03_data.keyboard.bit.q || vt03_data.l_fn) {
 			z = (z + CHASSIS_INCREMENT >= 1.0f) ? 1.0f : z + CHASSIS_INCREMENT;
