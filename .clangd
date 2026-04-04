@@ -1,0 +1,6 @@
+CompileFlags:
+  CompilationDatabase: build/Debug
+  Exclude:
+    - build/**
+    - third_party/**
+    - tests/**

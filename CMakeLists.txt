@@ -52,7 +52,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     bsp/Src/bsp_tim.c
     bsp/Src/bsp_usart.c
 
-    application/Src/armor.c
+    application/Src/ammo.c
     application/Src/chassis.c
     application/Src/gimbal.c
     application/Src/chore.c
