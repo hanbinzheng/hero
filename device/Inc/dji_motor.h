@@ -54,7 +54,7 @@ struct dji_motor {
 
 void dji_motor_interpret(uint8_t *rx_buff, struct dji_motor *motor);
 HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4]);
-HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6]);
+HAL_StatusTypeDef dji3508_set_ammo_vel(float vel[6]);
 HAL_StatusTypeDef dji6020_set_vel(float vel[4]);
 
 float dji_get_pos(struct dji_motor *motor, int offset);

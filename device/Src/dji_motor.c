@@ -18,7 +18,7 @@ struct dji_motor dji6020_2 = {.type = GM6020};
 struct dji_motor dji6020_3 = {.type = GM6020};
 struct dji_motor dji6020_4 = {.type = GM6020};
 
-/* armor friction motors */
+/* ammo friction motors */
 struct dji_motor dji3508_5 = {.type = M3508};
 struct dji_motor dji3508_6 = {.type = M3508};
 struct dji_motor dji3508_7 = {.type = M3508};
@@ -55,7 +55,7 @@ static struct pid_info pid_6020v2v_4 = {
 // static volatile struct pid_info pid_6020p2v_4 = {
 //     .kp = 7.5f, .ki = 0.0f, .kd = 0, .i_limit = 0.0f, .out_limit = 15};
 
-/* armor friction 3508 pid */
+/* ammo friction 3508 pid */
 static struct pid_info pid_3508v2c_5 = {
     .kp = 0.14f, .ki = 0.0005f, .kd = 0, .i_limit = 2.0, .out_limit = 20};
 static struct pid_info pid_3508v2c_6 = {
@@ -151,7 +151,7 @@ HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4])
 	return can_transmit(&hfdcan1, 0x200, CAN_ID_STD, data);
 }
 
-HAL_StatusTypeDef dji3508_set_armor_vel(float vel[6])
+HAL_StatusTypeDef dji3508_set_ammo_vel(float vel[6])
 {
 	/* 0x200 + 0x1FF */
 	float c1 = pid_calculate(&pid_3508v2c_5, vel[0], dji3508_5.vel);

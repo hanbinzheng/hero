@@ -6,7 +6,7 @@
 struct dm_motor dm4310; /* master id: 0x0B, can id: 0x01 */
 struct dm_motor dm6006;
 
-#define DM6006_ZERO (6394) /* 4200 or 5600 */
+#define DM6006_ZERO (4913)
 #define DM6006_DIFF_MAX (0.50f)
 #define DM6006_VEL_SCALE (0x1800)
 
