@@ -83,9 +83,9 @@ void ammo_task(void)
 	}
 
 	/* change the state of friction: shift or ctrl */
-	if (vt03_data.keyboard.bit.ctrl == 1) {
+	if (vt03_data.keyboard.bit.ctrl == 1 || vt03_data.trigger == 0) {
 		friction_state = 0; /* ctrl: off */
-	} else if (vt03_data.keyboard.bit.shift == 1) {
+	} else if (vt03_data.keyboard.bit.shift == 1 || vt03_data.trigger == 1) {
 		friction_state = 1; /* shift: on */
 	}
 	update_friction(friction_state);
@@ -97,7 +97,7 @@ void ammo_task(void)
 	}
 
     /* control logic for ammo trigger/booster */
-    float pos_trigger = slope_trigger(vt03_data.mouse_left);
+    float pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0));
     if (referee_info.power_heat_data.shooter_42mm_barrel_heat > referee_info.robot_status.shooter_barrel_heat_limit) {
         pos_trigger = dm4310.pos; /* overheated */
     }
