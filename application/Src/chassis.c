@@ -17,10 +17,10 @@
 #define OMEGA (3 * PI)
 
 #define CHASSIS_INCREMENT (0.016f) /* 125hz */
-#define CHASSIS_REDUCTION_SCALE (0.80f)
+#define CHASSIS_REDUCTION_SCALE (0.90f)
 
-#define CHASSIS_VEL_LEVEL (1.0f)
-#define CHASSIS_V_ROTATE_LEVEL (0.5f)
+#define CHASSIS_VEL_LEVEL (2.0f)
+#define CHASSIS_V_ROTATE_LEVEL (2.4f)
 
 static int const wheel_direction[4] = {1, -1, -1, 1};
 
