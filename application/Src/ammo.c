@@ -89,19 +89,20 @@ void ammo_task(void)
 		friction_state = 1; /* shift: on */
 	}
 	update_friction(friction_state);
-    dji3508_set_ammo_vel(vel_friction);
+    	dji3508_set_ammo_vel(vel_friction);
 
 	/* enable dm4310 motor at a const frequenccy */
 	if (ammo_count == 124) {
 		dm4310_enable();
 	}
 
-    /* control logic for ammo trigger/booster */
-    float pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0));
-    if (referee_info.power_heat_data.shooter_42mm_barrel_heat > referee_info.robot_status.shooter_barrel_heat_limit) {
-        pos_trigger = dm4310.pos; /* overheated */
-    }
-    dm4310_send_command(pos_trigger, DM4310_VEL_MAX);
+    	/* control logic for ammo trigger/booster */
+    	if (referee_info.power_heat_data.shooter_42mm_barrel_heat >= referee_info.robot_status.shooter_barrel_heat_limit) {
+        	pos_trigger = dm4310.pos; /* overheated */
+    	} else {
+		float pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0)); /* update trigger position */
+	}
+    	dm4310_send_command(pos_trigger, DM4310_VEL_MAX);
 
 	/* update state machine counter */
 	ammo_count = (ammo_count + 1) % 125;
