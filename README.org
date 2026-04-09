@@ -36,7 +36,7 @@ Electrical control code for RMUL 2026
 │   ├── mi_motor        #
 │   ├── dm_motor        #
 │   └── dbus            # Remote control receiver (DBUS) protocol
-└── BSP/              # Low-level hardware abstraction
+└── bsp/              # Low-level hardware abstraction
     ├── bsp_fdcan       # FDCAN configurations
     ├── bsp_spi         # SPI for IMU communication
     ├── bsp_tim         # Timers for high-frequency control loops
