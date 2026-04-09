@@ -26,7 +26,8 @@ Electrical control code for RMUL 2026
 │   ├── quaternion      # Quaternion-based calculation
 │   └── pid             # PID control algorithms
 ├── device/           # Hardware component drivers
-│   ├── can_device      # reception callback of can device
+│   ├── can_device      # Reception callback of can device
+│   ├── buzzer          # Buzzer encapsulation
 │   ├── imu             # IMU data acquisition
 │   ├── vision          # Communication with Orin Nano for self-aiming
 │   ├── vt03            # Referee VT03 image link remote control
