@@ -136,13 +136,13 @@ int main(void)
   MX_USART10_UART_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-	usart_init();
-	can_init();
-	tim_init();
-	imu_init();
-	dwt_init(480);
-	mi_motor_enable();
-	dm4310_enable();
+  dwt_init(480);
+  usart_init();
+  can_init();
+  tim_init();
+  imu_init();
+  mi_motor_enable();
+  dm4310_enable();
   /* USER CODE END 2 */
 
   /* Infinite loop */
