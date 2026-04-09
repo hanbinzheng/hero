@@ -11,9 +11,8 @@ Electrical control code for RMUL 2026
 - Device Layer: Data Interpretation and control logic.
 - BSP Layer: Hardware abstraction and low-level peripheral drivers.
 
----
 
-** Project Structure
+* Project Structure
 
 #+begin_src txt
 ├── application/      # Logic-level task execution
