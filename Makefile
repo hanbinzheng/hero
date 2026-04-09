@@ -57,6 +57,7 @@ device/Src/vt03.c \
 device/Src/can_device.c \
 device/Src/super_cap.c \
 device/Src/imu.c \
+device/Src/buzzer.c \
 device/Src/vision.c \
 device/Src/referee.c \
 device/Src/mi_motor.c \
