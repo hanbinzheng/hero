@@ -1,0 +1,74 @@
+* Hero
+
+#+begin_quote
+Electrical control code for RMUL 2026
+#+end_quote
+
+* Architecture
+
+- Application Layer: High-level task management and logic for robot subsystems.
+- Algorithm Layer: Mathematical foundations including kinematics and state estimation.
+- Device Layer: Data Interpretation and control logic.
+- BSP Layer: Hardware abstraction and low-level peripheral drivers.
+
+---
+
+** Project Structure
+
+#+begin_src txt
+├── application/      # Logic-level task execution
+│   ├── chassis         # Chassis control logic
+│   ├── gimbal          # Pitch and Yaw control logic
+│   ├── ammo            # Shotting logic
+│   └── chore           # Referee UI and super capacitor tasks
+├── algorithm/        # Core mathematical implementations
+│   ├── kinematics      # Omni-directional chassis kinematics (omni-wheel and steering wheel)
+│   ├── mahony          # Mahony filter for sensor fusion
+│   ├── quaternion      # Quaternion-based calculation
+│   └── pid             # PID control algorithms
+├── device/           # Hardware component drivers
+│   ├── can_device      # reception callback of can device
+│   ├── imu             # IMU data acquisition
+│   ├── vision          # Communication with Orin Nano for self-aiming
+│   ├── vt03            # Referee VT03 image link remote control
+│   ├── referee         # General referee communication
+│   ├── dji_motor       # Motors in use
+│   ├── mi_motor        #
+│   ├── dm_motor        #
+│   └── dbus            # Remote control receiver (DBUS) protocol
+└── BSP/              # Low-level hardware abstraction
+    ├── bsp_fdcan       # FDCAN configurations
+    ├── bsp_spi         # SPI for IMU communication
+    ├── bsp_tim         # Timers for high-frequency control loops
+    ├── bsp_usart       # Serial communication
+    ├── bsp_dwt         # DWT for precise timing
+    └── bsp_gpio        # GPIO configurations
+#+end_src
+
+
+* Control Loops
+
+The system utilizes hardware timer interrupts to ensure strict execution frequency for control stability:
+
+|----------------+-----------+--------+-----------------------------------------------------------|
+| Task           | Frequency | Timer  | Functionality                                             |
+|----------------+-----------+--------+-----------------------------------------------------------|
+| gimbal_task()  | 1000 Hz   | htim5  | yaw and pitch gimbal control, in application/Src/gimbal.c |
+|----------------+-----------+--------+-----------------------------------------------------------|
+| ammo_task()    | 125 Hz    | htim12 | chassis control, in application/Src/ammo.c                |
+|----------------+-----------+--------+-----------------------------------------------------------|
+| chassis_task() | 125 Hz    | htim15 | steering chassis control, in application/Src/chassis.c    |
+|----------------+-----------+--------+-----------------------------------------------------------|
+| chore_task()   | 200 Hz    | htim2  | chores like referee ui update, in application/Src/chore.c |
+|----------------+-----------+--------+-----------------------------------------------------------|
+
+
+* Build & Requirements
+
+- Toolchain: Arm GNU Toolchain (GCC)
+
+- Build System: Makefile
+
+- Hardware: STM32H723VGT6 (damiao-mc02)
+
+- Framework: STM32Cube HAL Package
