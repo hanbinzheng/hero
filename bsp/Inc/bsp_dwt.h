@@ -86,7 +86,7 @@ uint64_t dwt_get_timeline_us(void);
  *
  * @param Delay Delay time, unit is seconds
  */
-void dwt_delay(float delay_s);
+void dwt_delay_s(float delay_s);
 void dwt_delay_ms(uint32_t delay_ms);
 void dwt_delay_us(uint32_t delay_us);
 
