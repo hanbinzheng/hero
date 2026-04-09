@@ -3,6 +3,6 @@
 
 #include <stdint.h>
 
-void buzzer_beep_ms(uint8_t ms);
+void buzzer_beep_ms(uint16_t ms);
 
 #endif
