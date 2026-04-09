@@ -73,6 +73,7 @@ void ammo_task(void)
 {
 	static uint16_t ammo_count = 0;
 	ammo_debug++;
+    static float pos_trigger = 0.0f;
 
 	/* safe mode, for safety */
 	if (vt03_data.mode_sw == MODE_C) {
@@ -96,11 +97,11 @@ void ammo_task(void)
 		dm4310_enable();
 	}
 
-    	/* control logic for ammo trigger/booster */
-    	if (referee_info.power_heat_data.shooter_42mm_barrel_heat >= referee_info.robot_status.shooter_barrel_heat_limit) {
-        	pos_trigger = dm4310.pos; /* overheated */
-    	} else {
-		float pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0)); /* update trigger position */
+    /* control logic for ammo trigger/booster */
+    if (referee_info.power_heat_data.shooter_42mm_barrel_heat >= referee_info.robot_status.shooter_barrel_heat_limit) {
+        pos_trigger = dm4310.pos; /* overheated */
+    } else {
+		pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0)); /* update trigger position */
 	}
     	dm4310_send_command(pos_trigger, DM4310_VEL_MAX);
 
