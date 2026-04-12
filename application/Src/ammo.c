@@ -48,25 +48,23 @@ static void update_friction_state(void) {
     switch (friction_state) {
         case 0:
             /* state 0: friction off */
-            if (vt03_data.keyboard.bit.shift == 1) { friction_state = 3; } 
-            else if (vt03_data.trigger == 1) { friction_state = 2; }
+            if (vt03_data.keyboard.bit.shift == 1) { 
+				friction_state = 2; /* press shift to enter state 2 */
+			} else if (vt03_data.trigger == 1) { 
+				friction_state = 1;  /* press trigger to enter state 1 */
+			}
             break;
         case 1:
-            /* state 1: friction off */
-            if (vt03_data.keyboard.bit.shift == 1) { friction_state = 3; }
-            else if (vt03_data.trigger == 1) { friction_state = 2; }
-            break;
-        case 2:
-            /* state 2: friction on, entered by pressing trigger continuously */
-            /* enter: in state 0 and state 1, press trigger will enter state 3 */
+            /* state 1: friction on, entered by pressing trigger continuously */
+            /* enter: in state 0, press the trigger will enter state 1 */
             /* exit: trigger is unpressed will exist state 2 and switch to state 0 */
             if (vt03_data.trigger == 0) { friction_state = 0; }
             break;
-        case 3:
-            /* state 3: friction on */
-            /* enter: in any state, pressing shift once will enter state 3 */
-            /* exit: only ctrl is pressed will this exit state 3 and switch to state 1*/
-            if (vt03_data.keyboard.bit.ctrl == 1) { friction_state = 1; }
+        case 2:
+            /* state 2: friction on */
+            /* enter: in state 0, pressing shift once will enter state 2 */
+			/* exit: press control once to exist state 2 ans switch to state 0 */
+            if (vt03_data.keyboard.bit.ctrl == 1) { friction_state = 0; }
             break;
         default:
             break;
@@ -76,12 +74,11 @@ static void update_friction_state(void) {
 static void update_friction(void) {
     update_friction_state();
 
-    if (friction_state == 0 || friction_state == 1) {
+    if (friction_state == 0) {
         for (int i = 0; i < 6; i++) {
             vel_friction[i] *= FRICTION_REDUCTION_SCALE;
         }
-    } 
-    else if (friction_state == 2 || friction_state == 3) {
+    } else {
         /* inner */
         for (int i = 0; i < 3; i++) {
             float dir = friction_direction[i];
