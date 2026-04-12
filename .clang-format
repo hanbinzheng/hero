@@ -15,7 +15,7 @@ SpaceBeforeParens: ControlStatements
 PointerAlignment: Right
 
 # --- Line Breaking Limits ---
-ColumnLimit: 85
+ColumnLimit: 100
 
 # --- Function Declaration / Call Logic (Aligned with Linux Kernel) ---
 # Linux style allows packing multiple arguments on one line
