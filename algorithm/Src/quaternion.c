@@ -1,7 +1,7 @@
 #include "quaternion.h"
 #include <math.h>
 
-#define QUAT_EPSILON (1.0e-6f) // threshold
+#define QUAT_EPSILON (1.0e-6f) /* threshold */
 #define QUAT_PI (3.14159265358979323846f)
 
 static inline float quat_vector_norm_squared(float *vec, uint32_t len)
@@ -51,8 +51,7 @@ void quat_add(struct quaternion *a, struct quaternion *b, struct quaternion *res
 	result->q_z = a->q_z + b->q_z;
 }
 
-void quat_subtract(struct quaternion *a, struct quaternion *b,
-		   struct quaternion *result)
+void quat_subtract(struct quaternion *a, struct quaternion *b, struct quaternion *result)
 {
 	result->q_w = a->q_w - b->q_w;
 	result->q_x = a->q_x - b->q_x;
@@ -60,8 +59,7 @@ void quat_subtract(struct quaternion *a, struct quaternion *b,
 	result->q_z = a->q_z - b->q_z;
 }
 
-void quat_multiply(struct quaternion *a, struct quaternion *b,
-		   struct quaternion *result)
+void quat_multiply(struct quaternion *a, struct quaternion *b, struct quaternion *result)
 {
 	/*
 	  (q0 p0 − q1 p1 − q2 p2 − q3 p3) +

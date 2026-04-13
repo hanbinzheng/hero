@@ -18,18 +18,15 @@ void quat_copy(struct quaternion *dest, struct quaternion *src);
 
 /* basic algebra */
 void quat_add(struct quaternion *a, struct quaternion *b, struct quaternion *result);
-void quat_subtract(struct quaternion *a, struct quaternion *b,
-		   struct quaternion *result);
-void quat_multiply(struct quaternion *a, struct quaternion *b,
-		   struct quaternion *result);
+void quat_subtract(struct quaternion *a, struct quaternion *b, struct quaternion *result);
+void quat_multiply(struct quaternion *a, struct quaternion *b, struct quaternion *result);
 void quat_scale(struct quaternion *q, float scalar, struct quaternion *result);
 
 /* vector related algebra */
 float quat_norm(struct quaternion *q);
 void quat_normalize(struct quaternion *q);
 void quat_conjugate(struct quaternion *q, struct quaternion *result);
-void quat_inverse(struct quaternion *q,
-		  struct quaternion *result); /* conjugation + norm */
+void quat_inverse(struct quaternion *q, struct quaternion *result); /* conjugation + norm */
 
 /* quaternion derivative operation */
 void quat_derivative(struct quaternion *q, float w[3], struct quaternion *result);

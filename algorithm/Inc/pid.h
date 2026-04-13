@@ -3,25 +3,24 @@
 #include <stdint.h>
 
 struct pid_info {
-    float kp;
-    float ki;
-    float kd;
-    float i_limit;
-    float out_limit;
+	float kp;
+	float ki;
+	float kd;
+	float i_limit;
+	float out_limit;
 
-    float reference;
-    float measure;
-    float error;
-    float last_error;
-    float output;
+	float reference;
+	float measure;
+	float error;
+	float last_error;
+	float output;
 
-    // for debug
-    float p_out;
-    float i_out;
-    float d_out;
+	// for debug
+	float p_out;
+	float i_out;
+	float d_out;
 };
 
 float pid_calculate(struct pid_info *pid, float reference, float measure);
 
-
-#endif // PID_H_
+#endif /* PID_H_ */
