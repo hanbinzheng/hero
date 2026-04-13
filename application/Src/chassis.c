@@ -1,10 +1,10 @@
 #include "chassis.h"
 #include "arm_math.h"
 #include "dbus.h"
-#include "vt03.h"
 #include "dji_motor.h"
 #include "dm_motor.h"
 #include "kinematics.h"
+#include "vt03.h"
 #include <math.h>
 
 #define WHEEL_RADIUS (0.059f)
@@ -66,7 +66,8 @@ void get_cmd(float pos[4], float vel[4], float pos_cmd[4], float vel_cmd[4])
 	}
 }
 
-static inline float clamp(float x, float min, float max) {
+static inline float clamp(float x, float min, float max)
+{
 	if (x < min) {
 		return min;
 	} else if (x > max) {
@@ -76,24 +77,38 @@ static inline float clamp(float x, float min, float max) {
 	}
 }
 
-static float slope_x(int x){
+static float slope_x(int x)
+{
 	static float ret = 0;
-	switch(x){
-		case 1: ret += CHASSIS_INCREMENT; break;
-		case -1: ret -= CHASSIS_INCREMENT; break;
-      	case 0: ret *= CHASSIS_REDUCTION_SCALE; break;
-   	}
+	switch (x) {
+	case 1:
+		ret += CHASSIS_INCREMENT;
+		break;
+	case -1:
+		ret -= CHASSIS_INCREMENT;
+		break;
+	case 0:
+		ret *= CHASSIS_REDUCTION_SCALE;
+		break;
+	}
 	ret = clamp(ret, -1.0f, 1.0f);
 	return ret;
 }
 
-static float slope_y(int y){
+static float slope_y(int y)
+{
 	static float ret = 0;
-	switch(y){
-		case 1: ret += CHASSIS_INCREMENT; break;
-		case -1: ret -= CHASSIS_INCREMENT; break;
-      	case 0: ret *= CHASSIS_REDUCTION_SCALE; break;
-   	}
+	switch (y) {
+	case 1:
+		ret += CHASSIS_INCREMENT;
+		break;
+	case -1:
+		ret -= CHASSIS_INCREMENT;
+		break;
+	case 0:
+		ret *= CHASSIS_REDUCTION_SCALE;
+		break;
+	}
 	ret = clamp(ret, -1.0f, 1.0f);
 	return ret;
 }
@@ -101,7 +116,7 @@ static float slope_y(int y){
 uint64_t chassis_debug = 0;
 void chassis_task()
 {
-	chassis_debug++; /* only for debug usage */
+	chassis_debug++;		  /* only for debug usage */
 	static float x = 0, y = 0, z = 0; /* x, y and rotate */
 	static float vx_cmd = 0, vy_cmd = 0, v_rotate = 0, yaw_diff = 0;
 	static float pos_raw[4], pos_cmd[4], vel_raw[4], vel_cmd[4];

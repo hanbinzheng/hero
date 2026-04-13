@@ -91,8 +91,7 @@ void dwt_systime_update(void)
 
 	dwt_cnt_update();
 
-	cyccnt64 =
-	    (uint64_t)cyccnt_rountcount * (uint64_t)UINT32_MAX + (uint64_t)cnt_now;
+	cyccnt64 = (uint64_t)cyccnt_rountcount * (uint64_t)UINT32_MAX + (uint64_t)cnt_now;
 	cnt_temp1 = cyccnt64 / cpu_freq_hz;
 	cnt_temp2 = cyccnt64 - cnt_temp1 * cpu_freq_hz;
 	systime.s = cnt_temp1;
@@ -105,8 +104,7 @@ float dwt_get_timeline_s(void)
 {
 	dwt_systime_update();
 
-	float dwt_timeline_f32 =
-	    systime.s + systime.ms * 0.001f + systime.us * 0.000001f;
+	float dwt_timeline_f32 = systime.s + systime.ms * 0.001f + systime.us * 0.000001f;
 
 	return dwt_timeline_f32;
 }

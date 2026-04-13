@@ -47,7 +47,7 @@ static struct can_filter_config fdcan1_config[] = {
     {.rx_id = 0x208, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
     {.rx_id = 0x301, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
     {.rx_id = 0x00B, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
-	{.rx_id = 0x486, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
+    {.rx_id = 0x486, .rx_mask = 0x7FF, .id_type = CAN_ID_STD, .hfdcan = &hfdcan1},
 };
 
 static struct can_filter_config fdcan2_config[] = {
@@ -130,9 +130,8 @@ static HAL_StatusTypeDef add_filter(struct can_filter_config const *conf)
 	 * both parameters will be ignored if FilterConfig is different from
 	 * FDCAN_FILTER_TO_BUFFER.
 	 */
-	filter.FilterType = FDCAN_FILTER_MASK; /* Matching: FilterID1 & FilterID2 */
-	filter.FilterConfig =
-	    FDCAN_FILTER_TO_RXFIFO0; /* Always reports to RxFIFO0 */
+	filter.FilterType = FDCAN_FILTER_MASK;	       /* Matching: FilterID1 & FilterID2 */
+	filter.FilterConfig = FDCAN_FILTER_TO_RXFIFO0; /* Always reports to RxFIFO0 */
 	filter.FilterID1 = conf->rx_id;
 	filter.FilterID2 = conf->rx_mask;
 
@@ -161,8 +160,7 @@ static HAL_StatusTypeDef add_filter(struct can_filter_config const *conf)
  * Return: HAL_OK if all filters configured successfully,
  * HAL_ERROR if any filter fails or device limit exceeded.
  */
-static HAL_StatusTypeDef can_config_filter(struct can_filter_config const *conf,
-					   uint16_t num)
+static HAL_StatusTypeDef can_config_filter(struct can_filter_config const *conf, uint16_t num)
 {
 	/* TODO: Log Messages & Error Case */
 	/*
@@ -233,18 +231,16 @@ HAL_StatusTypeDef can_init(void)
 	uint8_t result = HAL_OK;
 	FDCAN_HandleTypeDef *hfdcan;
 	/* Decide acception strategy based on whether filters are configured. */
-	uint32_t unmatch =
-	    filter_configured ? FDCAN_REJECT : FDCAN_ACCEPT_IN_RX_FIFO0;
+	uint32_t unmatch = filter_configured ? FDCAN_REJECT : FDCAN_ACCEPT_IN_RX_FIFO0;
 
 	for (int i = 0; i < NUM_FDCAN_INSTANCE; i++) {
 		hfdcan = fdcan_inst[i].hfdcan;
 
-		if (HAL_FDCAN_ConfigGlobalFilter(hfdcan, unmatch, unmatch,
-						 FDCAN_REJECT_REMOTE,
+		if (HAL_FDCAN_ConfigGlobalFilter(hfdcan, unmatch, unmatch, FDCAN_REJECT_REMOTE,
 						 FDCAN_REJECT_REMOTE) != HAL_OK)
 			result = HAL_ERROR;
-		if (HAL_FDCAN_ActivateNotification(
-			hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) != HAL_OK)
+		if (HAL_FDCAN_ActivateNotification(hfdcan, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0) !=
+		    HAL_OK)
 			result = HAL_ERROR;
 		if (HAL_FDCAN_Start(hfdcan) != HAL_OK) {
 			result = HAL_ERROR;
@@ -267,8 +263,8 @@ HAL_StatusTypeDef can_init(void)
  *
  * Return: HAL_OK on success, HAL_ERROR otherwise.
  */
-HAL_StatusTypeDef can_transmit(FDCAN_HandleTypeDef *hfdcan, uint32_t id,
-			       enum can_id_type type, uint8_t *buff)
+HAL_StatusTypeDef can_transmit(FDCAN_HandleTypeDef *hfdcan, uint32_t id, enum can_id_type type,
+			       uint8_t *buff)
 {
 	/* TODO: Log Messages & Error Cases */
 	/* NOTE: This function will be absorted in future OOP design */
@@ -316,8 +312,7 @@ void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs)
 		if (buff == NULL)
 			return;
 
-		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header,
-					   buff) != HAL_OK)
+		if (HAL_FDCAN_GetRxMessage(hfdcan, FDCAN_RX_FIFO0, &rx_header, buff) != HAL_OK)
 			return;
 
 		if (hfdcan == &hfdcan1) {

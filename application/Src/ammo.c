@@ -1,9 +1,9 @@
 #include "ammo.h"
 #include "dbus.h"
-#include "vt03.h"
-#include "referee.h"
 #include "dji_motor.h"
 #include "dm_motor.h"
+#include "referee.h"
+#include "vt03.h"
 
 #ifndef PI
 #define PI (3.141592653589793238f)
@@ -19,7 +19,7 @@
 #define FRICTION_REDUCTION_SCALE (0.90f)
 #define FRICTION_INCREMENT_SCALE (5.0f)
 
-uint64_t ammo_debug = 0; /* incrementing global variables, 125/s */
+uint64_t ammo_debug = 0;	   /* incrementing global variables, 125/s */
 static uint8_t friction_state = 0; /* 0: off, 1: on, change by pause */
 
 static const float friction_direction[6] = {-1.0, 1.0, 1.0, -1.0, 1.0, 1.0};
@@ -28,104 +28,113 @@ static float vel_friction[6] = {0};
 
 static float limit_by_direction(float threshold, float real, float increment)
 {
-    float new_value = real + increment;
-    if (increment >= 0) {
-        return (new_value > threshold) ? threshold : new_value;
-    } else {
-        return (new_value < threshold) ? threshold : new_value;
-    }
+	float new_value = real + increment;
+	if (increment >= 0) {
+		return (new_value > threshold) ? threshold : new_value;
+	} else {
+		return (new_value < threshold) ? threshold : new_value;
+	}
 }
 
-static float slope_trigger(int value) {
-    static float ret = 0.0f;
-    if (value == 1){
-        ret -= TRIGGER_UPDATE_SCALE;
-    }
-    return ret;
+static float slope_trigger(int value)
+{
+	static float ret = 0.0f;
+	if (value == 1) {
+		ret -= TRIGGER_UPDATE_SCALE;
+	}
+	return ret;
 }
 
-static void update_friction_state(void) {
-    switch (friction_state) {
-        case 0:
-            /* state 0: friction off */
-            if (vt03_data.keyboard.bit.shift == 1) { 
-				friction_state = 2; /* press shift to enter state 2 */
-			} else if (vt03_data.trigger == 1) { 
-				friction_state = 1;  /* press trigger to enter state 1 */
-			}
-            break;
-        case 1:
-            /* state 1: friction on, entered by pressing trigger continuously */
-            /* enter: in state 0, press the trigger will enter state 1 */
-            /* exit: trigger is unpressed will exist state 2 and switch to state 0 */
-            if (vt03_data.trigger == 0) { friction_state = 0; }
-            break;
-        case 2:
-            /* state 2: friction on */
-            /* enter: in state 0, pressing shift once will enter state 2 */
-			/* exit: press control once to exist state 2 ans switch to state 0 */
-            if (vt03_data.keyboard.bit.ctrl == 1) { friction_state = 0; }
-            break;
-        default:
-            break;
-    }
+static void update_friction_state(void)
+{
+	switch (friction_state) {
+	case 0:
+		/* state 0: friction off */
+		if (vt03_data.keyboard.bit.shift == 1) {
+			friction_state = 2; /* press shift to enter state 2 */
+		} else if (vt03_data.trigger == 1) {
+			friction_state = 1; /* press trigger to enter state 1 */
+		}
+		break;
+	case 1:
+		/* state 1: friction on, entered by pressing trigger continuously */
+		/* enter: in state 0, press the trigger will enter state 1 */
+		/* exit: trigger is unpressed will exist state 2 and switch to state 0 */
+		if (vt03_data.trigger == 0) {
+			friction_state = 0;
+		}
+		break;
+	case 2:
+		/* state 2: friction on */
+		/* enter: in state 0, pressing shift once will enter state 2 */
+		/* exit: press control once to exist state 2 ans switch to state 0 */
+		if (vt03_data.keyboard.bit.ctrl == 1) {
+			friction_state = 0;
+		}
+		break;
+	default:
+		break;
+	}
 }
 
-static void update_friction(void) {
-    update_friction_state();
+static void update_friction(void)
+{
+	update_friction_state();
 
-    if (friction_state == 0) {
-        for (int i = 0; i < 6; i++) {
-            vel_friction[i] *= FRICTION_REDUCTION_SCALE;
-        }
-    } else {
-        /* inner */
-        for (int i = 0; i < 3; i++) {
-            float dir = friction_direction[i];
-            float bound = VEL_FRICTION_INNER_MAX * dir;
-            float delta = FRICTION_INCREMENT_SCALE * dir;
-            vel_friction[i] = limit_by_direction(bound, vel_friction[i], delta);
-        }
-        /* outer */
-        for (int i = 3; i < 6; i++) {
-            float dir = friction_direction[i];
-            float bound = VEL_FRICTION_OUTER_MAX * dir;
-            float delta = FRICTION_INCREMENT_SCALE * dir;
-            vel_friction[i] = limit_by_direction(bound, vel_friction[i], delta);
-        }
-    }
+	if (friction_state == 0) {
+		for (int i = 0; i < 6; i++) {
+			vel_friction[i] *= FRICTION_REDUCTION_SCALE;
+		}
+	} else {
+		/* inner */
+		for (int i = 0; i < 3; i++) {
+			float dir = friction_direction[i];
+			float bound = VEL_FRICTION_INNER_MAX * dir;
+			float delta = FRICTION_INCREMENT_SCALE * dir;
+			vel_friction[i] = limit_by_direction(bound, vel_friction[i], delta);
+		}
+		/* outer */
+		for (int i = 3; i < 6; i++) {
+			float dir = friction_direction[i];
+			float bound = VEL_FRICTION_OUTER_MAX * dir;
+			float delta = FRICTION_INCREMENT_SCALE * dir;
+			vel_friction[i] = limit_by_direction(bound, vel_friction[i], delta);
+		}
+	}
 }
 
 void ammo_task(void)
 {
 	static uint16_t ammo_count = 0;
 	ammo_debug++;
-    static float pos_trigger = 0.0f;
+	static float pos_trigger = 0.0f;
 
 	/* safe mode, for safety */
 	if (vt03_data.mode_sw == MODE_C) {
 		dji3508_set_ammo_vel(vel_friction_stop); /* set vel to 0 */
-		dm4310_send_command(dm4310.pos, 0.0f); /* current position, stay still */
+		dm4310_send_command(dm4310.pos, 0.0f);	 /* current position, stay still */
 		ammo_count = (ammo_count + 1) % 125;
 		return;
 	}
 
 	/* control the state of friction: keyboard or rc */
-    update_friction();
-    dji3508_set_ammo_vel(vel_friction);
+	update_friction();
+	dji3508_set_ammo_vel(vel_friction);
 
 	/* enable dm4310 motor at a const frequenccy */
 	if (ammo_count == 124) {
 		dm4310_enable();
 	}
 
-    /* control logic for ammo trigger/booster */
-    if (referee_info.power_heat_data.shooter_42mm_barrel_heat >= referee_info.robot_status.shooter_barrel_heat_limit) {
-        pos_trigger = dm4310.pos; /* overheated */
-    } else {
-		pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0)); /* update trigger position */
+	/* control logic for ammo trigger/booster */
+	if (referee_info.power_heat_data.shooter_42mm_barrel_heat >=
+	    referee_info.robot_status.shooter_barrel_heat_limit) {
+		pos_trigger = dm4310.pos; /* overheated */
+	} else {
+		/* update trigger position */
+		pos_trigger = slope_trigger(vt03_data.mouse_left || (vt03_data.wheel < 0));
 	}
-    	dm4310_send_command(pos_trigger, DM4310_VEL_MAX);
+	dm4310_send_command(pos_trigger, DM4310_VEL_MAX);
 
 	/* update state machine counter */
 	ammo_count = (ammo_count + 1) % 125;

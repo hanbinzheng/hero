@@ -1,9 +1,9 @@
 #include "gimbal.h"
 #include "dbus.h"
-#include "vt03.h"
-#include "imu.h"
 #include "dm_motor.h"
+#include "imu.h"
 #include "mi_motor.h"
+#include "vt03.h"
 
 #define HORIZONTAL_POS (0.0f)
 #define PITCH_DEPRESSION (-1.2981f)
@@ -27,7 +27,8 @@ static inline void limit(float *value, float min, float max)
 	}
 }
 
-static inline void correct_yaw_pos_ref(float *value) {
+static inline void correct_yaw_pos_ref(float *value)
+{
 	while (*value >= PI) {
 		*value -= 2 * PI;
 	}
@@ -81,7 +82,8 @@ void gimbal_task(void)
 		mi_motor_enable();
 	} else {
 		/* pitch control */
-		pos_pitch += (-vt03_data.rs_x + vt03_data.mouse_z * MOUSE_WHEEL_SENEITYVITY) * PITCH_SENSITIVITY;
+		pos_pitch += (-vt03_data.rs_x + vt03_data.mouse_z * MOUSE_WHEEL_SENEITYVITY) *
+			     PITCH_SENSITIVITY;
 		limit(&pos_pitch, PITCH_DEPRESSION, PITCH_ELEVATION);
 		mi_set_pos(pos_pitch);
 	}
