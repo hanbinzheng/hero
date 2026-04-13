@@ -1,17 +1,16 @@
 #include "vt03.h"
 #include "bsp_usart.h"
+#include "crc.h"
+#include "iwdg.h"
 #include "main.h"
 #include "usart.h"
-#include "iwdg.h"
-#include "crc.h"
 
 #include <string.h>
 
 int freq_count = 0;
 struct vt03_data vt03_data;
 
-static void vt03_data_interpret(uint8_t *rx_buff, int total_len,
-	struct vt03_data *vt03_data)
+static void vt03_data_interpret(uint8_t *rx_buff, int total_len, struct vt03_data *vt03_data)
 {
 	if (total_len > UART10_RX_BUFF_LEN) {
 		return; /* too long */
@@ -24,7 +23,6 @@ static void vt03_data_interpret(uint8_t *rx_buff, int total_len,
 	/* check crc16 */
 	uint16_t crc16 = get_crc16_check_sum(rx_buff, VT03_FRAME_LENGTH - 2);
 	if (crc16 == (rx_buff[VT03_FRAME_LENGTH - 2] | (rx_buff[VT03_FRAME_LENGTH - 1] << 8))) {
-			
 
 		struct vt03_raw_data *raw_data = (struct vt03_raw_data *)rx_buff;
 
