@@ -113,20 +113,15 @@ uint8_t bmi088_accel_init(void)
 	/* configure, set registers and define corresponding errors */
 	uint8_t BMI088_Acc_Init_Config[4][3] = {
 	    {BMI088_ACC_RANGE, BMI088_ACC_RANGE_3G, BMI088_ACC_RANGE_ERROR},
-	    {BMI088_ACC_CONF, BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set,
-	     BMI088_ACC_CONF_ERROR},
-	    {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON,
-	     BMI088_ACC_PWR_CTRL_ERROR},
-	    {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE,
-	     BMI088_ACC_PWR_CONF_ERROR}};
+	    {BMI088_ACC_CONF, BMI088_ACC_800_HZ | BMI088_ACC_CONF_MUST_Set, BMI088_ACC_CONF_ERROR},
+	    {BMI088_ACC_PWR_CTRL, BMI088_ACC_ENABLE_ACC_ON, BMI088_ACC_PWR_CTRL_ERROR},
+	    {BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE, BMI088_ACC_PWR_CONF_ERROR}};
 	static uint8_t read_value;
 
 	/* software reset, required */
-	bmi088_accel_write_single_reg(BMI088_ACC_SOFTRESET,
-				      BMI088_ACC_SOFTRESET_VALUE);
+	bmi088_accel_write_single_reg(BMI088_ACC_SOFTRESET, BMI088_ACC_SOFTRESET_VALUE);
 	dwt_delay_ms(BMI088_LONG_DELAY_TIME);
-	bmi088_accel_write_single_reg(BMI088_ACC_PWR_CONF,
-				      BMI088_ACC_PWR_ACTIVE_MODE);
+	bmi088_accel_write_single_reg(BMI088_ACC_PWR_CONF, BMI088_ACC_PWR_ACTIVE_MODE);
 	dwt_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 
 	/* check if commiunication is normal after reset */
@@ -143,8 +138,7 @@ uint8_t bmi088_accel_init(void)
 		bmi088_accel_write_single_reg(BMI088_Acc_Init_Config[i][0],
 					      BMI088_Acc_Init_Config[i][1]);
 		dwt_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
-		bmi088_accel_read_single_reg(BMI088_Acc_Init_Config[i][0],
-					     &read_value);
+		bmi088_accel_read_single_reg(BMI088_Acc_Init_Config[i][0], &read_value);
 		dwt_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 		/* return if error occurs */
 		if (read_value != BMI088_Acc_Init_Config[i][1]) {
@@ -158,14 +152,12 @@ uint8_t bmi088_gyro_init(void)
 {
 	uint8_t BMI088_Gyro_Init_Config[3][3] = {
 	    {BMI088_GYRO_RANGE, BMI088_GYRO_1000, BMI088_GYRO_RANGE_ERROR},
-	    {BMI088_GYRO_BANDWIDTH,
-	     BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set,
+	    {BMI088_GYRO_BANDWIDTH, BMI088_GYRO_1000_116_HZ | BMI088_GYRO_BANDWIDTH_MUST_Set,
 	     BMI088_GYRO_BANDWIDTH_ERROR},
 	    {BMI088_GYRO_LPM1, BMI088_GYRO_NORMAL_MODE, BMI088_GYRO_LPM1_ERROR}};
 	static uint8_t read_value;
 
-	bmi088_gyro_write_single_reg(BMI088_GYRO_SOFTRESET,
-				     BMI088_GYRO_SOFTRESET_VALUE);
+	bmi088_gyro_write_single_reg(BMI088_GYRO_SOFTRESET, BMI088_GYRO_SOFTRESET_VALUE);
 	dwt_delay_ms(BMI088_LONG_DELAY_TIME);
 
 	/* check whether communication is normal */
@@ -182,8 +174,7 @@ uint8_t bmi088_gyro_init(void)
 		bmi088_gyro_write_single_reg(BMI088_Gyro_Init_Config[i][0],
 					     BMI088_Gyro_Init_Config[i][1]);
 		dwt_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
-		bmi088_gyro_read_single_reg(BMI088_Gyro_Init_Config[i][0],
-					    &read_value);
+		bmi088_gyro_read_single_reg(BMI088_Gyro_Init_Config[i][0], &read_value);
 		dwt_delay_us(BMI088_COM_WAIT_SENSOR_TIME);
 		/* return if error occurs */
 		if (read_value != BMI088_Gyro_Init_Config[i][1]) {
@@ -229,14 +220,11 @@ void imu_get_data(struct imu_raw_data *data)
 	/* read gyro data, in radius */
 	bmi088_gyro_read_multi_reg(BMI088_GYRO_X_L, gyro_buff);
 	tmp = (int16_t)((gyro_buff[1] << 8) | gyro_buff[0]);
-	data->gyro[0] =
-	    (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[0];
+	data->gyro[0] = (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[0];
 	tmp = (int16_t)((gyro_buff[3] << 8) | gyro_buff[2]);
-	data->gyro[1] =
-	    (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[1];
+	data->gyro[1] = (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[1];
 	tmp = (int16_t)((gyro_buff[5] << 8) | gyro_buff[4]);
-	data->gyro[2] =
-	    (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[2];
+	data->gyro[2] = (float)tmp / GYRO_SENSITIVITY_1000 * PI_OVER_180 - gyro_bias[2];
 
 	/* read accel data, the unit is g */
 	bmi088_accel_read_multi_reg(BMI088_ACCEL_XOUT_L, accel_buff);
@@ -277,8 +265,7 @@ void imu_update(void)
 	imu_data.vel_yaw = w[2];
 
 	/* update quaternion with mahony */
-	mahony_update(&mahony_filter, imu_data.raw_data.gyro,
-		      imu_data.raw_data.accel);
+	mahony_update(&mahony_filter, imu_data.raw_data.gyro, imu_data.raw_data.accel);
 	imu_data.q = mahony_filter.q;
 
 	/* update euler angles from quaternion*/

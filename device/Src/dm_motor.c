@@ -37,9 +37,8 @@ static void feedback_interpret_1t4(uint8_t *rx_buff, struct dm_motor *motor)
 	motor->state = rx_buff[7];
 
 	motor->pos = ANGLE_TO_RADS(motor->raw_pos);
-	motor->vel =
-	    RPM_TO_RADS((int16_t)motor->raw_vel) / 100.0f; /* 100 vel, in rpm */
-	motor->cur = (float)((int16_t)motor->raw_cur) / 1000.0f; /* A */
+	motor->vel = RPM_TO_RADS((int16_t)motor->raw_vel) / 100.0f; /* 100 vel, in rpm */
+	motor->cur = (float)((int16_t)motor->raw_cur) / 1000.0f;    /* A */
 }
 
 /* general damiao motor data interpretation */
@@ -52,12 +51,9 @@ static void feedback_interpret(uint8_t *rx_buff, struct dm_motor *motor)
 	motor->temp_mos = rx_buff[6];
 	motor->temp_motor = rx_buff[7];
 
-	motor->pos =
-	    uint_to_float(motor->raw_pos, -DM4310_POS_MAX, DM4310_POS_MAX, 16);
-	motor->vel =
-	    uint_to_float(motor->raw_vel, -DM4310_VEL_MAX, DM4310_VEL_MAX, 12);
-	motor->trq =
-	    uint_to_float(motor->raw_trq, -DM4310_TRQ_MAX, DM4310_TRQ_MAX, 12);
+	motor->pos = uint_to_float(motor->raw_pos, -DM4310_POS_MAX, DM4310_POS_MAX, 16);
+	motor->vel = uint_to_float(motor->raw_vel, -DM4310_VEL_MAX, DM4310_VEL_MAX, 12);
+	motor->trq = uint_to_float(motor->raw_trq, -DM4310_TRQ_MAX, DM4310_TRQ_MAX, 12);
 }
 
 int dm_debug = 114514;

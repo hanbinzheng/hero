@@ -1,6 +1,6 @@
 #include "dbus.h"
-#include "main.h"
 #include "iwdg.h"
+#include "main.h"
 #include <stdint.h>
 
 /*
@@ -26,18 +26,14 @@ struct dbus_data dbus_data;
 
 static void dbus_data_interpret(uint8_t *buff, struct dbus_data *dbus_data)
 {
-	dbus_data->rs_y =
-	    (((buff[0] | (buff[1] << 8)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;
+	dbus_data->rs_y = (((buff[0] | (buff[1] << 8)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;
 	dbus_data->rs_x =
-	    ((((buff[1] >> 3) | (buff[2] << 5)) & 0x07FF) - CHANNEL_OFFSET) /
-	    CHANNEL_RATIO;
+	    ((((buff[1] >> 3) | (buff[2] << 5)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;
 	dbus_data->ls_y =
-	    ((((buff[2] >> 6) | (buff[3] << 2) | (buff[4] << 10)) & 0x07FF) -
-	     CHANNEL_OFFSET) /
+	    ((((buff[2] >> 6) | (buff[3] << 2) | (buff[4] << 10)) & 0x07FF) - CHANNEL_OFFSET) /
 	    CHANNEL_RATIO;
 	dbus_data->ls_x =
-	    ((((buff[4] >> 1) | (buff[5] << 7)) & 0x07FF) - CHANNEL_OFFSET) /
-	    CHANNEL_RATIO;
+	    ((((buff[4] >> 1) | (buff[5] << 7)) & 0x07FF) - CHANNEL_OFFSET) / CHANNEL_RATIO;
 
 	dbus_data->sw1 = ((buff[5] >> 4) & 0x000C) >> 2;
 	dbus_data->sw2 = (buff[5] >> 4) & 0x0003;
@@ -56,11 +52,11 @@ static void dbus_data_interpret(uint8_t *buff, struct dbus_data *dbus_data)
 /* rewrite weak function in bsp_usart.c */
 void uart5_data_interpret(uint8_t *rx_buff, uint16_t received_len)
 {
-		/* feed the dog */
-		HAL_IWDG_Refresh(&hiwdg1);
-		control_ready = 1;
+	/* feed the dog */
+	HAL_IWDG_Refresh(&hiwdg1);
+	control_ready = 1;
 
-		if (received_len != DBUS_FRAME_LENGTH)
-				return;
-		dbus_data_interpret(rx_buff, &dbus_data);
+	if (received_len != DBUS_FRAME_LENGTH)
+		return;
+	dbus_data_interpret(rx_buff, &dbus_data);
 }

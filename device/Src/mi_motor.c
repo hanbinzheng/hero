@@ -36,22 +36,19 @@ static inline void limit(float *value, float min, float max)
 void mi_motor_enable(void)
 {
 	uint8_t tx_data[8] = {0}; /* dummy data */
-	uint32_t identifier =
-	    (3 << 24) | (mi_motor.master_id << 8) | mi_motor.motor_id;
+	uint32_t identifier = (3 << 24) | (mi_motor.master_id << 8) | mi_motor.motor_id;
 	mi_enabled = can_transmit(&hfdcan3, identifier, CAN_ID_EXT, tx_data);
 }
 
 void mi_motor_disable(void)
 {
 	uint8_t tx_data[8] = {0};
-	uint32_t identifier =
-	    (4 << 24) | (mi_motor.master_id << 8) | mi_motor.motor_id;
+	uint32_t identifier = (4 << 24) | (mi_motor.master_id << 8) | mi_motor.motor_id;
 	can_transmit(&hfdcan3, identifier, CAN_ID_EXT, tx_data);
 	mi_motor.status = MI_DISABLED;
 }
 
-void mi_motor_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *rx_buff,
-			struct mi_motor *mi)
+void mi_motor_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *rx_buff, struct mi_motor *mi)
 {
 	mi_reception++;
 
@@ -91,8 +88,7 @@ void mi_motor_interpret(FDCAN_RxHeaderTypeDef *header, uint8_t *rx_buff,
 }
 
 /* if kp < 0 or kd < 0, use the default value */
-HAL_StatusTypeDef mi_send_command(float trq, float pos, float vel, float kp,
-				  float kd)
+HAL_StatusTypeDef mi_send_command(float trq, float pos, float vel, float kp, float kd)
 {
 	if (mi_motor.status != MI_ENABLED)
 		return HAL_ERROR;
@@ -134,7 +130,7 @@ HAL_StatusTypeDef mi_set_pos(float pos)
 	float pos_measure = mi_motor.pos;
 	if (pos - pos_measure >= MI_DIFF_MAX) {
 		pos = pos_measure + MI_DIFF_MAX;
-	} else if (pos - pos_measure <= - MI_DIFF_MAX) {
+	} else if (pos - pos_measure <= -MI_DIFF_MAX) {
 		pos = pos_measure - MI_DIFF_MAX;
 	}
 

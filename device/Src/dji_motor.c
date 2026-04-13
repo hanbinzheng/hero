@@ -124,14 +124,10 @@ void dji_motor_interpret(uint8_t *rx_buff, struct dji_motor *motor)
 HAL_StatusTypeDef dji3508_set_chassis_vel(float vel[4])
 {
 	/* 0x200 */
-	float c1 =
-	    pid_calculate(&pid_3508v2c_1, vel[0] * M3508_REDUC_RATE, dji3508_1.vel);
-	float c2 =
-	    pid_calculate(&pid_3508v2c_2, vel[1] * M3508_REDUC_RATE, dji3508_2.vel);
-	float c3 =
-	    pid_calculate(&pid_3508v2c_3, vel[2] * M3508_REDUC_RATE, dji3508_3.vel);
-	float c4 =
-	    pid_calculate(&pid_3508v2c_4, vel[3] * M3508_REDUC_RATE, dji3508_4.vel);
+	float c1 = pid_calculate(&pid_3508v2c_1, vel[0] * M3508_REDUC_RATE, dji3508_1.vel);
+	float c2 = pid_calculate(&pid_3508v2c_2, vel[1] * M3508_REDUC_RATE, dji3508_2.vel);
+	float c3 = pid_calculate(&pid_3508v2c_3, vel[2] * M3508_REDUC_RATE, dji3508_3.vel);
+	float c4 = pid_calculate(&pid_3508v2c_4, vel[3] * M3508_REDUC_RATE, dji3508_4.vel);
 
 	uint16_t c1_int = M3508_CURRENT_FLOAT_TO_INT(c1);
 	uint16_t c2_int = M3508_CURRENT_FLOAT_TO_INT(c2);
@@ -198,12 +194,9 @@ HAL_StatusTypeDef dji6020_set_vel(float vel[4])
 
 	float volt_1 = pid_calculate(&pid_6020v2v_1, vel[0], dji6020_1.vel) +
 		       0.45 * vel[0]; /* 0.45: fore feedback */
-	float volt_2 =
-	    pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + 0.5 * vel[1];
-	float volt_3 =
-	    pid_calculate(&pid_6020v2v_3, vel[2], dji6020_3.vel) + 0.5 * vel[2];
-	float volt_4 =
-	    pid_calculate(&pid_6020v2v_4, vel[3], dji6020_4.vel) + 0.45 * vel[3];
+	float volt_2 = pid_calculate(&pid_6020v2v_2, vel[1], dji6020_2.vel) + 0.5 * vel[1];
+	float volt_3 = pid_calculate(&pid_6020v2v_3, vel[2], dji6020_3.vel) + 0.5 * vel[2];
+	float volt_4 = pid_calculate(&pid_6020v2v_4, vel[3], dji6020_4.vel) + 0.45 * vel[3];
 
 	uint16_t volt_int_1 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_1);
 	uint16_t volt_int_2 = GM6020_VOLTAGE_FLOAT_TO_INT(volt_2);
@@ -262,8 +255,7 @@ HAL_StatusTypeDef dji6020_set_pos(float pos[4])
 
 		pos_control[i].smoothed_ref =
 		    update_pos_ref(pos_control[i].smoothed_ref, measure[i]);
-		vel_out =
-		    pos_control[i].kp * (pos_control[i].smoothed_ref - measure[i]);
+		vel_out = pos_control[i].kp * (pos_control[i].smoothed_ref - measure[i]);
 		if (vel_out > pos_control[i].out_limit) {
 			vel_cmd[i] = pos_control[i].out_limit;
 		} else if (vel_out < -pos_control[i].out_limit) {
