@@ -72,6 +72,7 @@ application/Src/chore.c \
 application/Src/chassis.c \
 application/Src/gimbal.c \
 application/Src/ammo.c \
+util/Src/vofa.c \
 Core/Src/iwdg.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_cortex.c \
 Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_rcc.c \
@@ -108,7 +109,9 @@ Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_usb.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
 Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
-Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c
+Middlewares/ST/STM32_USB_Device_Library/Class/CDC/Src/usbd_cdc.c \
+Middlewares/Third_Party/SEGGER/RTT/RTT/SEGGER_RTT.c \
+Middlewares/Third_Party/SEGGER/RTT/RTT/SEGGER_RTT_printf.c \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -179,13 +182,15 @@ C_INCLUDES =  \
 -Ibsp/Inc  \
 -Idevice/Inc \
 -Ialgorithm/Inc \
+-Iutil/Inc \
 -IMiddlewares/ST/ARM/DSP/INC \
 -Iapplication/Inc \
 -IMiddlewares/ST/ARM/DSP/Inc \
 -IUSB_DEVICE/App \
 -IUSB_DEVICE/Target \
 -IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc \
--IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc
+-IMiddlewares/ST/STM32_USB_Device_Library/Class/CDC/Inc \
+-IMiddlewares/Third_Party/SEGGER/RTT/RTT
 
 
 # compile gcc flags
@@ -253,16 +258,8 @@ $(BUILD_DIR):
 #######################################
 # clean up
 #######################################
-# clean:
-# 	-rm -fR $(BUILD_DIR)
 clean:
-	@if exist "$(BUILD_DIR)" ( \
-		echo [INFO] Cleaning '$(BUILD_DIR)'... && \
-		rmdir /s /q "$(BUILD_DIR)" && \
-		echo [INFO] Done. \
-	) else ( \
-		echo [INFO] Build directory '$(BUILD_DIR)' not found, nothing to clean. \
-	)
+	-rm -fR $(BUILD_DIR)
 
 #######################################
 # dependencies
