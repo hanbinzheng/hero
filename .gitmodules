@@ -1,0 +1,3 @@
+[submodule "Middlewares/Third_Party/SEGGER/RTT"]
+	path = Middlewares/Third_Party/SEGGER/RTT
+	url = https://github.com/SEGGERMicro/RTT.git
