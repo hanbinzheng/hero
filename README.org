@@ -1,8 +1,15 @@
 * Hero
 
 #+begin_quote
-Electrical control code for RMUL 2026
+Embedded Control Code for ZJUI-META Team's Hero Robot — RMUL 2026
 #+end_quote
+
+#+HTML: <p><img src="assets/hero_demo.jpg" width="45%" style="display:inline;" /> <img src="assets/hero_full.jpg" width="45%" style="display:inline;" /></p>
+
+* Demo
+
+[[file:assets/hero_shoot.gif]]
+
 
 * Architecture
 
